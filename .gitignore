@@ -1,0 +1,34 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables / secrets
+.env
+
+# IDE settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python distribution
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Model cache / temporary artifacts
+.cache/
