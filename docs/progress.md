@@ -372,8 +372,55 @@ monthly_demand_trend.png
 
 ---
 
-# Next Step
+# Phase 3 — Feature Engineering
 
-The next implementation stage is:
+**Status: Completed**
 
-**Phase 3 — Feature Engineering**
+Feature engineering was performed on the validated Phase 1 merged dataset.
+
+## 3.1 Time-Based Features
+
+Created:
+
+- `hour_sin`
+- `hour_cos`
+- `month_sin`
+- `month_cos`
+- `day_of_week_sin`
+- `day_of_week_cos`
+
+These encode cyclical temporal patterns.
+
+## 3.2 Lag Features
+
+Created:
+
+- `demand_lag_1h`
+- `demand_lag_24h`
+- `demand_lag_168h`
+
+These represent previous-hour, previous-day, and previous-week demand.
+
+## 3.3 Rolling Features
+
+Created:
+
+- `demand_rolling_mean_24h`
+- `demand_rolling_std_24h`
+- `demand_rolling_mean_168h`
+- `demand_rolling_std_168h`
+
+Rolling statistics were calculated using shifted demand values to avoid target leakage.
+
+## 3.4 Feature Dataset
+
+Generated:
+
+`data/processed/featured_dataset.csv`
+
+Intermediate datasets:
+
+```text
+data/processed/time_features.csv
+data/processed/lag_features.csv
+data/processed/rolling_features.csv
