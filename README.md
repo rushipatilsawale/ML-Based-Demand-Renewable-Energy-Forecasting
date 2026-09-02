@@ -1,85 +1,194 @@
 # ML-Based Demand & Renewable Energy Forecasting
 
-An end-to-end machine learning project for electricity demand forecasting using historical demand, temporal patterns, weather variables, and renewable-energy-related signals.
-
-> **Current milestone:** Phase 1 — Data Acquisition, Cleaning & Integration ✅
+An end-to-end machine learning and time-series forecasting project for electricity demand and renewable energy forecasting, with the long-term goal of supporting energy planning, renewable integration, storage decisions, and environmental impact analysis.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
-Electricity demand varies according to time, seasonality, weather conditions, and regional consumption patterns.
+Electricity demand varies continuously with time, weather, seasonal conditions, and human activity.
 
-The goal of this project is to develop a reproducible machine learning pipeline capable of learning these patterns and forecasting future electricity demand.
+This project develops a forecasting system that combines historical electricity demand, weather information, machine learning, and advanced time-series techniques to forecast future energy requirements.
 
-The project will progressively move from data engineering and exploratory analysis to feature engineering, machine learning model development, model comparison, and eventually an application/dashboard for forecasting.
-
----
-
-## 🎯 Objectives
-
-* Build a reliable electricity-demand dataset.
-* Integrate temporal and weather information.
-* Perform exploratory data analysis.
-* Engineer forecasting features.
-* Develop baseline and advanced ML forecasting models.
-* Compare model performance using appropriate forecasting metrics.
-* Analyze model behavior and feature importance.
-* Build a reproducible forecasting pipeline.
-* Develop a practical interface for displaying forecasts.
+The project will progressively expand from demand forecasting toward renewable energy forecasting and energy-management analysis.
 
 ---
 
-# 🏗️ Project Architecture
+# Project Pipeline
 
 ```text
-Raw Data
-   │
-   ├── Electricity Demand
-   │
-   └── Weather Data
-          │
-          ▼
-   Data Validation
-          │
-          ▼
-    Data Cleaning
-          │
-          ▼
-    Feature Creation
-          │
-          ▼
-      Data Merge
-          │
-          ▼
- Final Validated Dataset
-          │
-          ▼
-         EDA
-          │
-          ▼
- Feature Engineering
-          │
-          ▼
- Forecasting Models
-          │
-          ├── Baseline
-          ├── Machine Learning
-          └── Advanced Models
-                  │
-                  ▼
-           Model Comparison
-                  │
-                  ▼
-           Best Model
-                  │
-                  ▼
-          Forecasting System
+Data Acquisition
+       ↓
+Data Cleaning & Integration
+       ↓
+Exploratory Data Analysis
+       ↓
+Feature Engineering
+       ↓
+Baseline Forecasting
+       ↓
+Machine Learning Models
+       ↓
+Advanced Time-Series Models
+       ↓
+Performance Comparison
+       ↓
+Best Model Selection
+       ↓
+Explainability
+       ↓
+Renewable Energy Forecasting
+       ↓
+Uncertainty / Confidence Analysis
+       ↓
+Storage vs Backup Simulation
+       ↓
+Cost & CO₂ Impact
+       ↓
+Dashboard & Final System
 ```
 
 ---
 
-# 📂 Project Structure
+# Objectives
+
+* Forecast electricity demand using historical data.
+* Analyze the effect of weather and temporal patterns on demand.
+* Develop machine-learning-based forecasting models.
+* Compare machine learning and advanced time-series approaches.
+* Select the best-performing forecasting model.
+* Provide model explainability.
+* Extend the system toward solar and wind energy forecasting.
+* Estimate forecasting uncertainty/confidence.
+* Simulate storage versus backup energy decisions.
+* Analyze potential cost and CO₂ impacts.
+* Develop a final dashboard for visualization and decision support.
+
+---
+
+# Dataset
+
+## Electricity Demand
+
+The primary demand dataset contains hourly electricity demand for India.
+
+### Period
+
+```text
+2019-01-01 → 2024-04-30
+```
+
+### Records
+
+```text
+46,728 hourly records
+```
+
+### Demand variables
+
+* National demand
+* Northern region demand
+* Western region demand
+* Eastern region demand
+* Southern region demand
+* North-Eastern region demand
+
+---
+
+## Weather
+
+Historical hourly weather data is integrated with the demand dataset.
+
+### Weather variables
+
+* Temperature
+* Relative humidity
+* Cloud cover
+* Precipitation
+* Wind speed
+* Solar radiation
+
+---
+
+# Data Processing
+
+Raw data:
+
+```text
+data/raw/
+```
+
+Processed data:
+
+```text
+data/processed/
+```
+
+Final integrated dataset:
+
+```text
+data/processed/final_merged_dataset.csv
+```
+
+The final Phase 1 dataset contains:
+
+```text
+46,728 rows
+19 columns
+```
+
+Validation confirmed:
+
+* Correct row count
+* Correct columns
+* No missing values
+* No duplicate timestamps
+* Correct chronological order
+* Correct start date
+* Correct end date
+* Continuous hourly timestamps
+
+---
+
+# Exploratory Data Analysis
+
+## Status: Completed
+
+EDA includes:
+
+* Basic dataset analysis
+* Electricity demand analysis
+* Hourly demand patterns
+* Daily demand patterns
+* Monthly demand patterns
+* Yearly demand trends
+* Weekday vs weekend analysis
+* Regional demand analysis
+* Weather analysis
+* Demand-weather correlation analysis
+* Seasonality analysis
+
+### EDA scripts
+
+```text
+src/eda/basic_eda.py
+src/eda/demand_analysis.py
+src/eda/weather_analysis.py
+src/eda/correlation_analysis.py
+src/eda/seasonality_analysis.py
+```
+
+### EDA visualizations
+
+Stored in:
+
+```text
+reports/figures/
+```
+
+---
+
+# Project Structure
 
 ```text
 ML-Based-Demand-Renewable-Energy-Forecasting/
@@ -89,221 +198,140 @@ ML-Based-Demand-Renewable-Energy-Forecasting/
 │   └── processed/
 │
 ├── docs/
-│   ├── decisions.md
-│   └── progress.md
+│   ├── progress.md
+│   └── decisions.md
+│
+├── notebooks/
+│
+├── reports/
+│   └── figures/
 │
 ├── src/
-│   └── data/
+│   ├── data/
+│   │   ├── inspect_demand.py
+│   │   ├── clean_demand.py
+│   │   ├── merge_data.py
+│   │   └── validate_merged.py
+│   │
+│   └── eda/
 │       ├── __init__.py
-│       ├── inspect_demand.py
-│       ├── clean_demand.py
-│       ├── fetch_weather.py
-│       ├── merge_data.py
-│       └── validate_merged.py
+│       ├── basic_eda.py
+│       ├── demand_analysis.py
+│       ├── weather_analysis.py
+│       ├── correlation_analysis.py
+│       └── seasonality_analysis.py
 │
-├── .env.example
-├── .gitignore
 ├── README.md
-└── requirements.txt
+└── .gitignore
 ```
 
 ---
 
-# 📊 Phase 1 — Data Pipeline
+# Project Progress
 
-## Electricity Demand
-
-The initial demand dataset contains:
-
-* **46,728 hourly observations**
-* Period: **January 2019 → April 2024**
-* National electricity demand
-* Regional electricity demand
-
-The demand data was validated for:
-
-* Missing values
-* Duplicate timestamps
-* Hourly continuity
-* Required columns
-* Chronological ordering
-
-Result:
-
-**Validation PASSED ✅**
+| Phase | Description                              | Status      |
+| ----- | ---------------------------------------- | ----------- |
+| 1     | Data Acquisition, Cleaning & Integration | ✅ Completed |
+| 2     | Exploratory Data Analysis                | ✅ Completed |
+| 3     | Feature Engineering                      | ⏳ Next      |
+| 4     | Baseline Forecasting                     | ⏳ Pending   |
+| 5     | Machine Learning Models                  | ⏳ Pending   |
+| 6     | Advanced Time-Series Models              | ⏳ Pending   |
+| 7     | Performance Comparison                   | ⏳ Pending   |
+| 8     | Best Model Selection                     | ⏳ Pending   |
+| 9     | Explainability                           | ⏳ Pending   |
+| 10    | Renewable Energy Forecasting             | ⏳ Pending   |
+| 11    | Uncertainty / Confidence Analysis        | ⏳ Pending   |
+| 12    | Storage vs Backup Simulation             | ⏳ Pending   |
+| 13    | Cost & CO₂ Impact Analysis               | ⏳ Pending   |
+| 14    | Dashboard & Final System                 | ⏳ Pending   |
 
 ---
 
-## 🌦️ Weather Data
+# Current Status
 
-Hourly historical weather information was acquired and aligned with the electricity demand timestamps.
+**Phase 1 — Completed**
 
-Current variables include:
+Data acquisition, cleaning, integration, and validation have been completed successfully.
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+**Phase 2 — Completed**
 
-Current implementation uses a representative Delhi location as the initial weather signal.
+Exploratory data analysis, demand analysis, weather analysis, correlation analysis, and seasonality analysis have been completed successfully.
 
-This is an initial modelling assumption and may be extended to multiple Indian locations or regions during later development.
-
----
-
-# 🔗 Final Dataset
-
-The demand and weather datasets were integrated using `datetime`.
-
-Final dataset:
+**Current next stage:**
 
 ```text
-data/processed/final_merged_dataset.csv
+Phase 3 — Feature Engineering
 ```
-
-Dimensions:
-
-```text
-46,728 rows
-19 columns
-```
-
-Final validation:
-
-**PASSED ✅**
 
 ---
 
-# 🧪 Reproducible Data Pipeline
+# Future Renewable Energy Components
 
-The pipeline can be reproduced using:
+The project will later incorporate renewable-energy-related components including:
 
-```bash
-python src/data/inspect_demand.py
-python src/data/clean_demand.py
-python src/data/fetch_weather.py
-python src/data/merge_data.py
-python src/data/validate_merged.py
-```
+* Solar energy forecasting
+* Wind energy forecasting
+* Renewable supply analysis
+* Uncertainty/confidence estimation
+* Storage versus backup simulation
+* Cost analysis
+* CO₂ impact analysis
 
-The original raw data is preserved and generated datasets are excluded from Git tracking.
-
----
-
-# 🧠 Planned Machine Learning Pipeline
-
-The modeling phase will follow a progressive approach rather than immediately selecting a complex model.
-
-Planned stages:
-
-```text
-EDA
- ↓
-Feature Engineering
- ↓
-Baseline Forecast
- ↓
-Machine Learning Models
- ↓
-Advanced Time-Series Models
- ↓
-Performance Comparison
- ↓
-Best Model Selection
- ↓
-Explainability
-```
-
-Candidate models will be evaluated based on the characteristics discovered during EDA and feature engineering.
-
-Potential model families include:
-
-* Naive/seasonal baseline
-* Linear regression
-* Tree-based models
-* Gradient boosting
-* XGBoost/LightGBM-style boosting
-* Time-series/deep-learning models where justified
-
-The final model selection will be based on validation performance rather than complexity alone.
+These components are intentionally kept for their planned later stages rather than being forced into the Phase 1 demand-weather dataset.
 
 ---
 
-# 📈 Evaluation
-
-Forecasting models will be evaluated using appropriate metrics such as:
-
-* MAE
-* RMSE
-* MAPE or sMAPE
-* R² where appropriate
-
-Time-based train/validation/test splitting will be used to avoid data leakage.
-
----
-
-# 🔬 Development Methodology
-
-The project uses:
+# Technologies
 
 * Python
 * Pandas
 * NumPy
-* Git
-* GitHub
-* Virtual environment
-* Reproducible scripts
-* Documentation-driven development
+* Matplotlib
+* Scikit-learn
+* Time-Series Forecasting
+* Machine Learning
+* Explainable AI
+* Data Visualization
 
-Git branches are used for major development stages.
+Additional libraries will be introduced as required by later phases.
 
-Example:
+---
+
+# Development Approach
+
+The project is being implemented incrementally.
+
+Each phase includes:
+
+1. Implementation
+2. Validation
+3. Documentation
+4. Git commit
+5. GitHub push
+6. Pull Request
+7. Merge into `main`
+
+This keeps the project reproducible and allows progress to be tracked throughout development.
+
+---
+
+# Documentation
+
+Project progress:
 
 ```text
-main
- │
- ├── feature/data-pipeline
- ├── feature/eda
- ├── feature/feature-engineering
- ├── feature/model-training
- └── feature/dashboard
+docs/progress.md
+```
+
+Technical decisions:
+
+```text
+docs/decisions.md
 ```
 
 ---
 
-# 📚 Documentation
+# License
 
-Project progress:
-
-`docs/progress.md`
-
-Technical decisions:
-
-`docs/decisions.md`
-
----
-
-# 🚧 Current Status
-
-| Phase                     | Status      |
-| ------------------------- | ----------- |
-| Project Setup             | ✅ Completed |
-| Data Acquisition          | ✅ Completed |
-| Data Cleaning             | ✅ Completed |
-| Data Integration          | ✅ Completed |
-| Final Data Validation     | ✅ Completed |
-| Exploratory Data Analysis | ⬜ Next      |
-| Feature Engineering       | ⬜ Planned   |
-| Model Development         | ⬜ Planned   |
-| Model Comparison          | ⬜ Planned   |
-| Explainability            | ⬜ Planned   |
-| Dashboard/Application     | ⬜ Planned   |
-| Final Documentation       | ⬜ Planned   |
-
----
-
-## 👨‍💻 Development
-
-This project is being developed incrementally with reproducible data-processing scripts, version control, documented technical decisions, and validated intermediate outputs.
+This project is developed for academic and research purposes.
