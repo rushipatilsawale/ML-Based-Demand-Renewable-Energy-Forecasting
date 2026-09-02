@@ -1,113 +1,192 @@
 # Project Decisions
 
-## Decision Log
+## ML-Based Demand & Renewable Energy Forecasting
 
-This document records important technical decisions made during the development of the project and the reasoning behind them.
-
----
-
-## D001 — Use Git Feature Branches
-
-**Decision:**
-Development work will be performed on feature branches and merged into `main` after completion.
-
-**Reason:**
-This keeps `main` stable and creates a clear development history.
-
-Current branch used for Phase 1:
-
-`feature/data-pipeline`
+This document records important technical and project-scope decisions made during implementation.
 
 ---
 
-## D002 — Preserve Raw Data
+# Phase 1 — Data Acquisition, Cleaning & Integration
 
-**Decision:**
-Original datasets will remain unchanged in `data/raw/`.
+## Decision 1 — Primary Demand Dataset
 
-**Reason:**
-Raw data should always be preserved so that the processing pipeline remains reproducible and traceable.
+The historical India electricity demand dataset was selected as the primary demand source.
 
----
+The dataset contains hourly national and regional electricity demand from:
 
-## D003 — Create Processed Datasets
+```text
+2019-01-01
+to
+2024-04-30
+```
 
-**Decision:**
-Cleaned and merged datasets will be generated under `data/processed/`.
-
-**Reason:**
-Separating raw and processed data prevents accidental modification of source data and makes the pipeline easier to understand.
+The national demand variable is selected as the primary forecasting target.
 
 ---
 
-## D004 — Use Datetime as the Integration Key
+## Decision 2 — Weather Data
 
-**Decision:**
-Demand and weather observations will be aligned using `datetime`.
+Historical hourly weather data was integrated with the electricity demand data.
 
-**Reason:**
-Both datasets contain hourly observations covering the same period. Timestamp alignment provides a natural key for integrating demand and weather information.
+The selected weather variables are:
 
----
-
-## D005 — Use One-to-One Merge Validation
-
-**Decision:**
-The demand and weather datasets are merged using a one-to-one relationship.
-
-**Reason:**
-Each timestamp should correspond to exactly one demand observation and one weather observation. Pandas merge validation is used to detect unexpected duplication.
+* Temperature
+* Relative humidity
+* Cloud cover
+* Precipitation
+* Wind speed
+* Solar radiation
 
 ---
 
-## D006 — Demand as the Primary Dataset
+## Decision 3 — Common Time Resolution
 
-**Decision:**
-The demand dataset is treated as the primary dataset during integration.
+The project uses **hourly resolution** as the primary time resolution.
 
-**Reason:**
-Electricity demand is the forecasting target, while weather variables act as external/exogenous predictors.
-
-A left join ensures that demand observations remain the reference set.
+All integrated datasets must therefore use compatible hourly timestamps.
 
 ---
 
-## D007 — Initial Representative Weather Location
+## Decision 4 — Final Phase 1 Dataset
 
-**Decision:**
-A representative Delhi location is used for the initial weather dataset.
+The Phase 1 integrated dataset contains electricity demand and weather information.
 
-**Reason:**
-The current phase focuses on establishing a reproducible end-to-end data pipeline. Spatially distributed weather data can be evaluated and added in a later iteration.
+Final dataset:
 
-**Important limitation:**
-Delhi weather should not be interpreted as India's complete weather profile.
+```text
+data/processed/final_merged_dataset.csv
+```
 
----
+Dimensions:
 
-## D008 — Exclude Large Datasets from Git
+```text
+46,728 rows
+19 columns
+```
 
-**Decision:**
-Raw and processed datasets are excluded from Git tracking.
-
-**Reason:**
-
-* Avoid unnecessarily large repository size.
-* Keep source data separate from code.
-* Allow datasets to be reproduced through the pipeline.
-* Prevent accidental commits of large generated files.
+The dataset passed all validation checks.
 
 ---
 
-## D009 — Validate Every Major Pipeline Stage
+## Decision 5 — Time-Based Features
 
-**Decision:**
-Validation scripts are used for the demand dataset and final merged dataset.
+The following basic time features were created during preprocessing:
 
-**Reason:**
-Automated validation reduces the risk of silently introducing missing values, duplicate timestamps, incorrect intervals, or structural errors before ML modeling.
+* hour
+* day
+* month
+* year
+* day of week
+* weekend indicator
 
-Current validation scripts:
+Additional forecasting features will be created during Phase 3.
 
-* `src/data/inspect_demand.py`
-* `src/data/validate_merged.py`
+---
+
+# Phase 2 — Exploratory Data Analysis
+
+## Decision 6 — EDA Dataset
+
+EDA is performed on:
+
+```text
+data/processed/final_merged_dataset.csv
+```
+
+This ensures that all exploratory analysis is performed on the validated integrated dataset.
+
+---
+
+## Decision 7 — Demand Analysis
+
+National electricity demand is the primary target variable for the initial forecasting stages.
+
+Demand was analyzed across:
+
+* Hour
+* Day
+* Month
+* Year
+* Weekday/weekend
+* Region
+
+This was done to identify temporal patterns and seasonality before feature engineering.
+
+---
+
+## Decision 8 — Weather Analysis
+
+Weather variables were analyzed individually and against electricity demand.
+
+The objective is to determine which environmental variables may provide useful predictive information for demand forecasting.
+
+---
+
+## Decision 9 — Correlation Analysis
+
+Correlation analysis was performed between national electricity demand and the available weather variables.
+
+Correlation is used as an exploratory tool and will not be treated as the sole criterion for selecting forecasting features.
+
+---
+
+## Decision 10 — Seasonality
+
+Hourly, daily, monthly, and yearly patterns are being considered when designing forecasting features.
+
+The observed temporal structure will guide the creation of lag, rolling-window, calendar, and seasonal features during Phase 3.
+
+---
+
+# Renewable Energy Scope
+
+## Decision 11 — Solar and Wind Generation
+
+Actual renewable electricity generation data is **not being forced into the Phase 1 demand-weather merged dataset**.
+
+Solar and wind supply forecasting remain part of the later project stages according to the overall project roadmap.
+
+The existing solar radiation and wind-speed variables are retained as weather/environmental variables.
+
+---
+
+## Decision 12 — CO₂ Analysis
+
+CO₂ impact calculations are retained for the later system-level stage.
+
+They will be incorporated after forecasting and energy-management components are developed rather than artificially adding CO₂ calculations to the Phase 1 dataset.
+
+---
+
+# Modeling Decisions
+
+## Decision 13 — Feature Engineering Before Modeling
+
+Feature engineering will be completed before baseline and machine-learning forecasting models are implemented.
+
+The feature-engineering stage will focus on extracting predictive information from:
+
+* Historical demand
+* Weather
+* Calendar information
+* Temporal patterns
+* Lagged demand
+* Rolling statistics
+
+---
+
+## Decision 14 — Evaluation
+
+Forecasting models will be evaluated using appropriate time-series evaluation methods.
+
+Random train-test splitting will be avoided for the primary forecasting workflow because it can introduce temporal leakage.
+
+---
+
+# Current Decision
+
+The next implementation stage is:
+
+**Phase 3 — Feature Engineering**
+
+No forecasting model will be selected until the required features have been prepared and validated.
