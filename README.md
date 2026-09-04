@@ -369,15 +369,38 @@ The final feature dataset was validated for:
 
 ---
 
+## Phase 4 — Baseline Forecasting
+
+Baseline forecasting was implemented to establish benchmark performance before training advanced machine-learning and time-series models.
+
+Implemented baselines:
+
+- Seasonal Naive — 24-hour lag
+- Seasonal Naive — 168-hour lag
+- Linear Regression
+
+Evaluation metrics:
+
+- MAE
+- RMSE
+- MAPE
+
+Generated artifacts:
+
+```text
+data/processed/baseline_predictions.csv
+reports/baseline_metrics.csv
+reports/figures/baseline_comparison.png
+
 # Project Progress
 
-| Phase | Description                              | Status      |
-| ----- | ---------------------------------------- | ----------- |
+| Phase | Description                              | Status       |
+| ----- | ---------------------------------------- | -----------  |
 | 1     | Data Acquisition, Cleaning & Integration | ✅ Completed |
 | 2     | Exploratory Data Analysis                | ✅ Completed |
 | 3     | Feature Engineering                      | ✅ Completed |
-| 4     | Baseline Forecasting                     | ⏳ Next      |
-| 5     | Machine Learning Models                  | ⏳ Pending   |
+| 4     | Baseline Forecasting                     | ✅ Completed |
+| 5     | Machine Learning Models                  | ⏳ Next      |
 | 6     | Advanced Time-Series Models              | ⏳ Pending   |
 | 7     | Performance Comparison                   | ⏳ Pending   |
 | 8     | Best Model Selection                     | ⏳ Pending   |
