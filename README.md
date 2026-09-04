@@ -369,7 +369,7 @@ The final feature dataset was validated for:
 
 ---
 
-## Phase 4 — Baseline Forecasting
+# Phase 4 — Baseline Forecasting
 
 Baseline forecasting was implemented to establish benchmark performance before training advanced machine-learning and time-series models.
 
@@ -392,6 +392,40 @@ data/processed/baseline_predictions.csv
 reports/baseline_metrics.csv
 reports/figures/baseline_comparison.png
 
+---
+
+# Phase 5 — Machine Learning Models
+
+Three machine-learning regression models were trained for national electricity demand forecasting:
+
+- Random Forest
+- Gradient Boosting
+- XGBoost
+
+The models use engineered temporal, lag, rolling, and weather features.
+
+An 80/20 chronological train-test split was used.
+
+Models were evaluated using:
+
+- MAE
+- RMSE
+- MAPE
+
+The ML models were compared against the Phase 4 baseline models.
+
+Generated artifacts:
+
+```text
+models/random_forest.pkl
+models/gradient_boosting.pkl
+models/xgboost.pkl
+
+reports/ml_model_metrics.csv
+reports/figures/ml_model_comparison.png
+
+---
+
 # Project Progress
 
 | Phase | Description                              | Status       |
@@ -400,8 +434,8 @@ reports/figures/baseline_comparison.png
 | 2     | Exploratory Data Analysis                | ✅ Completed |
 | 3     | Feature Engineering                      | ✅ Completed |
 | 4     | Baseline Forecasting                     | ✅ Completed |
-| 5     | Machine Learning Models                  | ⏳ Next      |
-| 6     | Advanced Time-Series Models              | ⏳ Pending   |
+| 5     | Machine Learning Models                  | ✅ Completed |
+| 6     | Advanced Time-Series Models              | ⏳ Next      |
 | 7     | Performance Comparison                   | ⏳ Pending   |
 | 8     | Best Model Selection                     | ⏳ Pending   |
 | 9     | Explainability                           | ⏳ Pending   |
