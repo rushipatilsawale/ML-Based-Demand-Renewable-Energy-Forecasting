@@ -424,3 +424,61 @@ Intermediate datasets:
 data/processed/time_features.csv
 data/processed/lag_features.csv
 data/processed/rolling_features.csv
+
+---
+
+# Phase 4 — Baseline Forecasting
+
+**Status: Completed**
+
+Baseline forecasting was implemented using the engineered dataset from Phase 3.
+
+## 4.1 Seasonal Naive Baselines
+
+Two seasonal naive forecasting approaches were implemented:
+
+* `naive_24h` — uses demand from the previous day at the same hour.
+* `naive_168h` — uses demand from the previous week at the same hour.
+
+## 4.2 Linear Regression Baseline
+
+A Linear Regression model was implemented using:
+
+* Cyclical time features
+* Demand lag features
+* Rolling demand statistics
+* Weather features
+
+A chronological 80/20 train-test split was used to avoid random temporal mixing.
+
+## 4.3 Evaluation Metrics
+
+The baseline models were evaluated using:
+
+* MAE
+* RMSE
+* MAPE
+
+Generated metrics:
+
+`reports/baseline_metrics.csv`
+
+## 4.4 Predictions
+
+Generated:
+
+`data/processed/baseline_predictions.csv`
+
+## 4.5 Visualization
+
+Generated:
+
+`reports/figures/baseline_comparison.png`
+
+The visualization compares the RMSE performance of the baseline models.
+
+## 4.6 Validation
+
+The baseline forecasting pipeline was executed successfully and the evaluation metrics and comparison plot were generated.
+
+**Phase 4 completed successfully.**

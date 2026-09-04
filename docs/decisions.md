@@ -183,10 +183,38 @@ Random train-test splitting will be avoided for the primary forecasting workflow
 
 ---
 
-# Current Decision
+# Phase 3 — Feature Engineering Decisions
 
-The next implementation stage is:
+## Decision 15 — Cyclical Time Encoding
 
-**Phase 3 — Feature Engineering**
+Cyclical encoding was selected for hour, month, and day-of-week variables so that temporal relationships are represented continuously.
 
-No forecasting model will be selected until the required features have been prepared and validated.
+## Decision 16 — Demand Lag Features
+
+Three demand lags were selected:
+
+- 1 hour
+- 24 hours
+- 168 hours
+
+These represent short-term, daily, and weekly demand dependencies.
+
+## Decision 17 — Rolling Features
+
+24-hour and 168-hour rolling mean and standard deviation features were created.
+
+Rolling calculations use shifted demand values so the current target value is not included.
+
+## Decision 18 — Leakage Prevention
+
+Feature engineering must prevent future information from entering the predictors.
+
+The current demand target is therefore excluded from its own lag and rolling calculations.
+
+## Decision 19 — Feature Dataset
+
+The engineered dataset is stored separately from the original merged dataset:
+
+`data/processed/featured_dataset.csv`
+
+The original Phase 1 dataset remains unchanged.
