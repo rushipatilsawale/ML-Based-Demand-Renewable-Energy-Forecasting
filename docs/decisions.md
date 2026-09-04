@@ -218,3 +218,93 @@ The engineered dataset is stored separately from the original merged dataset:
 `data/processed/featured_dataset.csv`
 
 The original Phase 1 dataset remains unchanged.
+
+---
+
+# Phase 4 — Baseline Forecasting Decisions
+
+## Decision 20 — Seasonal Naive Baselines
+
+Seasonal naive forecasting was selected as the primary simple benchmark.
+
+Two seasonal periods were used:
+
+* 24 hours for daily seasonality
+* 168 hours for weekly seasonality
+
+This provides simple benchmarks that future forecasting models must outperform.
+
+## Decision 21 — Linear Regression Baseline
+
+Linear Regression was selected as a simple machine-learning baseline before introducing more advanced models.
+
+The model uses engineered temporal, lag, rolling, and weather features.
+
+## Decision 22 — Chronological Train-Test Split
+
+An 80/20 chronological split was selected instead of a random split.
+
+This preserves the temporal structure of the forecasting problem and prevents future observations from entering the training data.
+
+## Decision 23 — Evaluation Metrics
+
+The forecasting baselines are evaluated using:
+
+* MAE
+* RMSE
+* MAPE
+
+RMSE is particularly useful for identifying larger forecasting errors.
+
+## Decision 24 — Baseline Artifacts
+
+Baseline predictions are stored separately from the feature dataset:
+
+`data/processed/baseline_predictions.csv`
+
+Evaluation results are stored in:
+
+`reports/baseline_metrics.csv`
+
+This keeps the original feature dataset unchanged.
+
+---
+
+# Phase 5 — Machine Learning Model Decisions
+
+## Decision 25 — Chronological Data Split
+
+An 80/20 chronological train-test split was retained for machine-learning forecasting.
+
+Random splitting was avoided because forecasting models must predict future observations using information available in the past.
+
+## Decision 26 — Random Forest
+
+Random Forest Regressor was selected as a tree-based ensemble benchmark capable of modeling nonlinear relationships between demand, temporal features, and weather variables.
+
+## Decision 27 — Gradient Boosting
+
+Gradient Boosting Regressor was selected as a sequential boosting model for comparison with Random Forest.
+
+## Decision 28 — XGBoost
+
+XGBoost Regressor was selected as an additional gradient-boosted tree model and provides a strong benchmark for nonlinear forecasting relationships.
+
+## Decision 29 — Common Evaluation Framework
+
+All baseline and machine-learning models are evaluated using the same:
+
+* MAE
+* RMSE
+* MAPE
+
+This allows direct and consistent comparison.
+
+## Decision 30 — Model Artifacts
+
+Trained models are stored separately in the `models/` directory.
+
+Prediction results and evaluation metrics are stored separately from the original feature dataset.
+
+---
+

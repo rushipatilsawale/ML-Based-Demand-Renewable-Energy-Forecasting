@@ -482,3 +482,95 @@ The visualization compares the RMSE performance of the baseline models.
 The baseline forecasting pipeline was executed successfully and the evaluation metrics and comparison plot were generated.
 
 **Phase 4 completed successfully.**
+
+---
+
+# Phase 5 — Machine Learning Models
+
+**Status: Completed**
+
+Machine-learning forecasting models were trained using the engineered features from Phase 3.
+
+## 5.1 ML Data Preparation
+
+The featured dataset was divided chronologically:
+
+* 80% training data
+* 20% testing data
+
+A chronological split was used to preserve the time-series structure and prevent future data from entering the training set.
+
+Generated:
+
+```text
+data/processed/ml_train.csv
+data/processed/ml_test.csv
+```
+
+## 5.2 Machine Learning Models
+
+Three regression models were implemented:
+
+* Random Forest Regressor
+* Gradient Boosting Regressor
+* XGBoost Regressor
+
+Generated model artifacts:
+
+```text
+models/random_forest.pkl
+models/gradient_boosting.pkl
+models/xgboost.pkl
+```
+
+## 5.3 Model Evaluation
+
+The machine-learning models were evaluated alongside the Phase 4 baseline models.
+
+Models compared:
+
+* Naive 24h
+* Naive 168h
+* Linear Regression
+* Random Forest
+* Gradient Boosting
+* XGBoost
+
+Evaluation metrics:
+
+* MAE
+* RMSE
+* MAPE
+
+Generated:
+
+```text
+reports/ml_model_metrics.csv
+data/processed/ml_predictions.csv
+```
+
+## 5.4 Performance Comparison
+
+Generated:
+
+```text
+reports/figures/ml_model_comparison.png
+```
+
+The comparison provides a common benchmark for selecting models for subsequent phases.
+
+## 5.5 Validation
+
+The following were validated:
+
+* Training and testing datasets
+* All three trained model artifacts
+* Prediction output
+* Evaluation metrics
+* Required model coverage
+* Performance comparison visualization
+
+**Phase 5 completed successfully.**
+
+---
+
