@@ -10,7 +10,7 @@ Electricity demand varies continuously with time, weather, seasonal conditions, 
 
 This project develops a forecasting system that combines historical electricity demand, weather information, machine learning, and advanced time-series techniques to forecast future energy requirements.
 
-The project will progressively expand from electricity demand forecasting toward renewable energy forecasting and energy-management analysis.
+The project progressively expands from electricity demand forecasting toward renewable energy forecasting and energy-management analysis.
 
 ---
 
@@ -108,13 +108,15 @@ Historical hourly weather data was integrated with the electricity demand data.
 * Wind speed
 * Solar radiation
 
+The weather data was obtained for Delhi using historical hourly weather information.
+
 ---
 
 # Phase 1 — Data Acquisition, Cleaning & Integration
 
 **Status: ✅ Completed**
 
-Phase 1 established the validated dataset used for the subsequent analysis and forecasting stages.
+Phase 1 established the validated demand-weather dataset used by the subsequent analysis and forecasting stages.
 
 ## Demand Data Processing
 
@@ -144,13 +146,16 @@ Basic temporal features were also created:
 
 ## Weather Data
 
-Historical hourly weather data was acquired and prepared.
+Historical hourly weather data was acquired and integrated with the demand data.
 
-Generated:
+Weather variables:
 
-```text
-data/raw/weather_hourly.csv
-```
+* Temperature
+* Relative humidity
+* Cloud cover
+* Precipitation
+* Wind speed
+* Solar radiation
 
 ## Dataset Integration
 
@@ -166,7 +171,7 @@ Generated:
 data/processed/final_merged_dataset.csv
 ```
 
-### Final Dataset
+## Final Dataset
 
 ```text
 Rows    : 46,728
@@ -271,6 +276,44 @@ Average weekend demand:
 158,171.17 MW
 ```
 
+## Weather Statistics
+
+Average temperature:
+
+```text
+24.05 °C
+```
+
+Average relative humidity:
+
+```text
+62.61 %
+```
+
+Average cloud cover:
+
+```text
+31.94 %
+```
+
+Average precipitation:
+
+```text
+0.08 mm
+```
+
+Average wind speed:
+
+```text
+9.73 km/h
+```
+
+Average solar radiation:
+
+```text
+202.42 W/m²
+```
+
 ## EDA Visualizations
 
 Generated visualizations are stored in:
@@ -279,7 +322,20 @@ Generated visualizations are stored in:
 reports/figures/
 ```
 
-The figures include demand patterns, regional comparisons, weather patterns, correlation analysis, and seasonality trends.
+The figures include:
+
+* Average demand by hour
+* Average demand by day
+* Average demand by month
+* Average demand by year
+* Regional demand comparison
+* Temperature analysis
+* Solar radiation analysis
+* Wind speed analysis
+* Demand-weather correlation
+* Correlation matrix
+* Daily demand trend
+* Monthly demand trend
 
 ---
 
@@ -287,7 +343,7 @@ The figures include demand patterns, regional comparisons, weather patterns, cor
 
 **Status: ✅ Completed**
 
-Feature engineering was performed using the validated Phase 1 dataset and the findings from Phase 2 EDA.
+Feature engineering was performed using the validated Phase 1 dataset and findings from Phase 2 EDA.
 
 ## Time-Based Features
 
@@ -331,7 +387,7 @@ demand_rolling_mean_168h
 demand_rolling_std_168h
 ```
 
-Rolling calculations use previous demand values to avoid target leakage.
+Rolling calculations use shifted demand values to avoid target leakage.
 
 ## Feature Engineering Scripts
 
@@ -371,79 +427,265 @@ The final feature dataset was validated for:
 
 # Phase 4 — Baseline Forecasting
 
-Baseline forecasting was implemented to establish benchmark performance before training advanced machine-learning and time-series models.
+**Status: ✅ Completed**
 
-Implemented baselines:
+Baseline forecasting was implemented to establish benchmark performance before training machine-learning and advanced time-series models.
 
-- Seasonal Naive — 24-hour lag
-- Seasonal Naive — 168-hour lag
-- Linear Regression
+## Baseline Models
 
-Evaluation metrics:
+### Seasonal Naive — 24 Hours
 
-- MAE
-- RMSE
-- MAPE
+Uses demand from the previous day as the prediction.
 
-Generated artifacts:
+```text
+naive_24h = demand(t - 24)
+```
+
+### Seasonal Naive — 168 Hours
+
+Uses demand from the previous week as the prediction.
+
+```text
+naive_168h = demand(t - 168)
+```
+
+### Linear Regression
+
+A linear regression model was implemented using temporal, lag, rolling, and weather features.
+
+## Baseline Scripts
+
+```text
+src/baseline/__init__.py
+src/baseline/naive_baseline.py
+src/baseline/regression_baseline.py
+src/baseline/evaluate_baselines.py
+```
+
+## Evaluation Metrics
+
+The baseline models were evaluated using:
+
+* MAE — Mean Absolute Error
+* RMSE — Root Mean Squared Error
+* MAPE — Mean Absolute Percentage Error
+
+## Generated Artifacts
 
 ```text
 data/processed/baseline_predictions.csv
 reports/baseline_metrics.csv
 reports/figures/baseline_comparison.png
+```
 
 ---
 
 # Phase 5 — Machine Learning Models
 
-Three machine-learning regression models were trained for national electricity demand forecasting:
+**Status: ✅ Completed**
 
-- Random Forest
-- Gradient Boosting
-- XGBoost
+Machine-learning regression models were trained for national electricity demand forecasting using the engineered features developed in Phase 3.
 
-The models use engineered temporal, lag, rolling, and weather features.
+## ML Data Preparation
 
-An 80/20 chronological train-test split was used.
+The feature dataset was divided chronologically:
 
-Models were evaluated using:
+```text
+80% → Training
+20% → Testing
+```
 
-- MAE
-- RMSE
-- MAPE
+A chronological split was used to preserve the time-series structure and prevent future observations from being randomly mixed into the training data.
 
-The ML models were compared against the Phase 4 baseline models.
+Script:
 
-Generated artifacts:
+```text
+src/models/prepare_ml_data.py
+```
+
+Generated:
+
+```text
+data/processed/ml_train.csv
+data/processed/ml_test.csv
+```
+
+---
+
+## Machine Learning Models
+
+Three regression models were implemented.
+
+### Random Forest Regressor
+
+A tree-based ensemble model capable of capturing nonlinear relationships between demand, temporal features, lag features, rolling statistics, and weather variables.
+
+Script:
+
+```text
+src/models/train_random_forest.py
+```
+
+Generated model:
 
 ```text
 models/random_forest.pkl
-models/gradient_boosting.pkl
-models/xgboost.pkl
+```
 
+### Gradient Boosting Regressor
+
+A sequential boosting model that builds an ensemble of weak learners to improve prediction performance.
+
+Script:
+
+```text
+src/models/train_gradient_boosting.py
+```
+
+Generated model:
+
+```text
+models/gradient_boosting.pkl
+```
+
+### XGBoost Regressor
+
+A gradient-boosted tree model used as a strong nonlinear forecasting benchmark.
+
+Script:
+
+```text
+src/models/train_xgboost.py
+```
+
+Generated model:
+
+```text
+models/xgboost.pkl
+```
+
+---
+
+## ML Features
+
+The models use:
+
+### Cyclical Features
+
+```text
+hour_sin
+hour_cos
+month_sin
+month_cos
+day_of_week_sin
+day_of_week_cos
+```
+
+### Lag Features
+
+```text
+demand_lag_1h
+demand_lag_24h
+demand_lag_168h
+```
+
+### Rolling Features
+
+```text
+demand_rolling_mean_24h
+demand_rolling_std_24h
+demand_rolling_mean_168h
+demand_rolling_std_168h
+```
+
+### Weather Features
+
+```text
+temperature_2m_c
+relative_humidity_pct
+cloud_cover_pct
+precipitation_mm
+wind_speed_10m_kmh
+solar_radiation_w_m2
+```
+
+---
+
+## ML Evaluation
+
+The Phase 5 models were compared against the Phase 4 baseline models:
+
+```text
+Naive 24h
+Naive 168h
+Linear Regression
+Random Forest
+Gradient Boosting
+XGBoost
+```
+
+Evaluation metrics:
+
+* MAE
+* RMSE
+* MAPE
+
+Script:
+
+```text
+src/models/evaluate_ml_models.py
+```
+
+Generated:
+
+```text
+data/processed/ml_predictions.csv
 reports/ml_model_metrics.csv
 reports/figures/ml_model_comparison.png
+```
+
+---
+
+## Phase 5 Validation
+
+Script:
+
+```text
+src/models/validate_models.py
+```
+
+Validation checks include:
+
+* Training dataset availability
+* Testing dataset availability
+* Model artifact availability
+* Prediction output availability
+* Evaluation metric availability
+* Required model coverage
+* Performance comparison output
+
+**Phase 5 completed successfully.**
 
 ---
 
 # Project Progress
 
-| Phase | Description                              | Status       |
-| ----- | ---------------------------------------- | -----------  |
-| 1     | Data Acquisition, Cleaning & Integration | ✅ Completed |
-| 2     | Exploratory Data Analysis                | ✅ Completed |
-| 3     | Feature Engineering                      | ✅ Completed |
-| 4     | Baseline Forecasting                     | ✅ Completed |
-| 5     | Machine Learning Models                  | ✅ Completed |
-| 6     | Advanced Time-Series Models              | ⏳ Next      |
-| 7     | Performance Comparison                   | ⏳ Pending   |
-| 8     | Best Model Selection                     | ⏳ Pending   |
-| 9     | Explainability                           | ⏳ Pending   |
-| 10    | Renewable Energy Forecasting             | ⏳ Pending   |
-| 11    | Uncertainty / Confidence Analysis        | ⏳ Pending   |
-| 12    | Storage vs Backup Simulation             | ⏳ Pending   |
-| 13    | Cost & CO₂ Impact Analysis               | ⏳ Pending   |
-| 14    | Dashboard & Final System                 | ⏳ Pending   |
+| Phase | Description                              | Status      |
+| ----: | ---------------------------------------- | ----------- |
+|     1 | Data Acquisition, Cleaning & Integration | ✅ Completed |
+|     2 | Exploratory Data Analysis                | ✅ Completed |
+|     3 | Feature Engineering                      | ✅ Completed |
+|     4 | Baseline Forecasting                     | ✅ Completed |
+|     5 | Machine Learning Models                  | ✅ Completed |
+|     6 | Advanced Time-Series Models              | ⏳ Next      |
+|     7 | Performance Comparison                   | ⏳ Pending   |
+|     8 | Best Model Selection                     | ⏳ Pending   |
+|     9 | Explainability                           | ⏳ Pending   |
+|    10 | Renewable Energy Forecasting             | ⏳ Pending   |
+|    11 | Uncertainty / Confidence Analysis        | ⏳ Pending   |
+|    12 | Storage vs Backup Simulation             | ⏳ Pending   |
+|    13 | Cost & CO₂ Impact Analysis               | ⏳ Pending   |
+|    14 | Dashboard & Final System                 | ⏳ Pending   |
 
 ---
 
@@ -455,13 +697,17 @@ The following phases have been successfully completed:
 Phase 1 — Data Acquisition, Cleaning & Integration
 Phase 2 — Exploratory Data Analysis
 Phase 3 — Feature Engineering
+Phase 4 — Baseline Forecasting
+Phase 5 — Machine Learning Models
 ```
 
 The current next stage is:
 
 ```text
-Phase 4 — Baseline Forecasting
+Phase 6 — Advanced Time-Series Models
 ```
+
+Phase 6 has **not yet been implemented**.
 
 ---
 
@@ -488,6 +734,9 @@ Actual solar and wind generation data and CO₂ calculations are intentionally r
 * NumPy
 * Matplotlib
 * Scikit-learn
+* XGBoost
+* Joblib
+* Statsmodels
 * Time-Series Forecasting
 * Machine Learning
 * Explainable AI
@@ -501,6 +750,7 @@ Additional libraries will be introduced as required by later phases.
 
 ```text
 ML-Based-Demand-Renewable-Energy-Forecasting/
+
 │
 ├── data/
 │   ├── raw/
@@ -513,12 +763,17 @@ ML-Based-Demand-Renewable-Energy-Forecasting/
 │   ├── Full_Project_Execution_Plan.md
 │   └── PROJECT_CONTEXT.md
 │
+├── models/
+│
 ├── notebooks/
 │
 ├── reports/
-│   └── figures/
+│   ├── figures/
+│   ├── baseline_metrics.csv
+│   └── ml_model_metrics.csv
 │
 ├── src/
+│   │
 │   ├── data/
 │   │   ├── inspect_demand.py
 │   │   ├── clean_demand.py
@@ -533,13 +788,28 @@ ML-Based-Demand-Renewable-Energy-Forecasting/
 │   │   ├── correlation_analysis.py
 │   │   └── seasonality_analysis.py
 │   │
-│   └── features/
+│   ├── features/
+│   │   ├── __init__.py
+│   │   ├── create_time_features.py
+│   │   ├── create_lag_features.py
+│   │   ├── create_rolling_features.py
+│   │   ├── create_features.py
+│   │   └── validate_features.py
+│   │
+│   ├── baseline/
+│   │   ├── __init__.py
+│   │   ├── naive_baseline.py
+│   │   ├── regression_baseline.py
+│   │   └── evaluate_baselines.py
+│   │
+│   └── models/
 │       ├── __init__.py
-│       ├── create_time_features.py
-│       ├── create_lag_features.py
-│       ├── create_rolling_features.py
-│       ├── create_features.py
-│       └── validate_features.py
+│       ├── prepare_ml_data.py
+│       ├── train_random_forest.py
+│       ├── train_gradient_boosting.py
+│       ├── train_xgboost.py
+│       ├── evaluate_ml_models.py
+│       └── validate_models.py
 │
 ├── README.md
 └── .gitignore
@@ -595,6 +865,24 @@ Project context:
 
 ```text
 docs/PROJECT_CONTEXT.md
+```
+
+---
+
+# Model Artifacts
+
+Trained machine-learning models are generated under:
+
+```text
+models/
+```
+
+The `.pkl` model artifacts are generated outputs and are excluded from normal Git tracking because some trained models exceed GitHub's standard file-size limit.
+
+They can be regenerated using the corresponding training scripts under:
+
+```text
+src/models/
 ```
 
 ---
