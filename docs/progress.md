@@ -574,3 +574,101 @@ The following were validated:
 
 ---
 
+# Phase 6 — Advanced Time-Series Models
+
+**Status: Completed**
+
+Phase 6 introduced classical statistical time-series forecasting models to complement the machine-learning models from Phase 5.
+
+## 6.1 Time-Series Data Preparation
+
+The engineered dataset was converted into a dedicated time-series dataset containing:
+
+* `datetime`
+* `national_demand_mw`
+
+The data was sorted chronologically and divided using the existing 80/20 chronological train-test strategy.
+
+Generated:
+
+```text
+data/processed/ts_train.csv
+data/processed/ts_test.csv
+```
+
+## 6.2 ARIMA Model
+
+An ARIMA model was trained using:
+
+```text
+ARIMA(2,1,2)
+```
+
+The trained model was saved as:
+
+```text
+models/arima.pkl
+```
+
+## 6.3 SARIMA Model
+
+A seasonal ARIMA model was implemented to capture daily hourly seasonality.
+
+Configuration:
+
+```text
+SARIMA(1,1,1)(1,1,1,24)
+```
+
+The model uses a seasonal period of 24 hours.
+
+To make training computationally practical, SARIMA was trained using the most recent 90 days of the training dataset.
+
+The trained model was saved as:
+
+```text
+models/sarima.pkl
+```
+
+## 6.4 Forecasting and Evaluation
+
+ARIMA and SARIMA forecasts were generated for the Phase 5 test period and compared with:
+
+* Naive 24h
+* Naive 168h
+* Linear Regression
+* Random Forest
+* Gradient Boosting
+* XGBoost
+
+Evaluation metrics:
+
+* MAE
+* RMSE
+* MAPE
+
+Generated:
+
+```text
+data/processed/ts_predictions.csv
+reports/time_series_metrics.csv
+```
+
+## 6.5 Validation
+
+The following were validated:
+
+* ARIMA model artifact
+* SARIMA model artifact
+* Time-series train/test datasets
+* Chronological ordering
+* Duplicate timestamps
+* Forecast columns
+* Missing predictions
+* Evaluation metrics
+* Required model coverage
+
+Phase 6 completed successfully.
+
+---
+

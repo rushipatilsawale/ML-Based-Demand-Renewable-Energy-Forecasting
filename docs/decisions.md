@@ -308,3 +308,73 @@ Prediction results and evaluation metrics are stored separately from the origina
 
 ---
 
+# Phase 6 — Advanced Time-Series Model Decisions
+
+## Decision 31 — Dedicated Time-Series Dataset
+
+A separate dataset containing `datetime` and `national_demand_mw` was created for classical time-series models.
+
+This keeps statistical time-series modeling separate from the feature-heavy machine-learning pipeline.
+
+## Decision 32 — ARIMA
+
+ARIMA was selected as a classical statistical forecasting benchmark.
+
+Configuration:
+
+```text
+(2,1,2)
+```
+
+## Decision 33 — Daily SARIMA Seasonality
+
+SARIMA was selected to model both non-seasonal and seasonal demand behavior.
+
+A seasonal period of 24 hours was selected because the dataset contains hourly electricity demand and daily demand patterns were identified during EDA.
+
+Configuration:
+
+```text
+(1,1,1)(1,1,1,24)
+```
+
+## Decision 34 — SARIMA Training Window
+
+SARIMA was trained using the most recent 90 days of the training dataset.
+
+This decision was made because fitting a seasonal SARIMA model with 24-hour seasonality on the complete 37,248-hour training dataset was computationally expensive.
+
+## Decision 35 — Common Evaluation Framework
+
+ARIMA and SARIMA were evaluated using the same metrics used in previous phases:
+
+* MAE
+* RMSE
+* MAPE
+
+They were also compared with the Phase 4 and Phase 5 forecasting models.
+
+## Decision 36 — Time-Series Artifacts
+
+Time-series models are stored separately in:
+
+```text
+models/
+```
+
+Forecasts are stored in:
+
+```text
+data/processed/
+```
+
+Evaluation metrics are stored in:
+
+```text
+reports/
+```
+
+This maintains separation between models, predictions, and evaluation results.
+
+---
+

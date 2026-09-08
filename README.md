@@ -668,6 +668,37 @@ Validation checks include:
 
 ---
 
+# Phase 6 — Advanced Time-Series Models
+
+Classical time-series models were added to complement the machine-learning forecasting models.
+
+Implemented models:
+
+- ARIMA
+- SARIMA
+
+ARIMA configuration:
+
+```text
+(2,1,2)
+
+SARIMA configuration:
+(1,1,1)(1,1,1,24)
+
+The SARIMA model uses a 24-hour seasonal period to capture daily hourly demand patterns.
+
+Generated artifacts:
+models/arima.pkl
+models/sarima.pkl
+data/processed/ts_train.csv
+data/processed/ts_test.csv
+data/processed/ts_predictions.csv
+reports/time_series_metrics.csv
+
+ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5 machine-learning models using MAE, RMSE, and MAPE.
+
+---
+
 # Project Progress
 
 | Phase | Description                              | Status      |
@@ -677,8 +708,8 @@ Validation checks include:
 |     3 | Feature Engineering                      | ✅ Completed |
 |     4 | Baseline Forecasting                     | ✅ Completed |
 |     5 | Machine Learning Models                  | ✅ Completed |
-|     6 | Advanced Time-Series Models              | ⏳ Next      |
-|     7 | Performance Comparison                   | ⏳ Pending   |
+|     6 | Advanced Time-Series Models              | ✅ Completed |
+|     7 | Performance Comparison                   | ⏳ Next      |
 |     8 | Best Model Selection                     | ⏳ Pending   |
 |     9 | Explainability                           | ⏳ Pending   |
 |    10 | Renewable Energy Forecasting             | ⏳ Pending   |
