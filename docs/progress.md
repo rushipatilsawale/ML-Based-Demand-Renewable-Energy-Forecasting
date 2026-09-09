@@ -672,3 +672,34 @@ Phase 6 completed successfully.
 
 ---
 
+## Phase 7 — Performance Comparison
+
+**Status: Completed**
+
+A unified performance comparison was created across all forecasting models developed in Phases 4, 5, and 6.
+
+### Models Compared
+
+- Naive 24h
+- Naive 168h
+- Linear Regression
+- Random Forest
+- Gradient Boosting
+- XGBoost
+- ARIMA
+- SARIMA
+
+### Evaluation Metrics
+
+- MAE — Mean Absolute Error
+- RMSE — Root Mean Squared Error
+- MAPE — Mean Absolute Percentage Error
+
+### Generated Outputs
+
+```text
+reports/performance_comparison.csv
+reports/figures/performance_comparison.png
+
+---
+

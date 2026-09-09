@@ -378,3 +378,54 @@ This maintains separation between models, predictions, and evaluation results.
 
 ---
 
+# Phase 7 - Performance Comparison Decisions
+
+## Decision 37 — Unified Model Performance Comparison
+
+A unified performance comparison was created to evaluate forecasting models developed across Phases 4, 5, and 6.
+
+The comparison includes:
+
+- Naive 24h
+- Naive 168h
+- Linear Regression
+- Random Forest
+- Gradient Boosting
+- XGBoost
+- ARIMA
+- SARIMA
+
+---
+
+## Decision 38 — Standard Evaluation Metrics
+
+The project uses the following common metrics for comparing forecasting models:
+
+- MAE
+- RMSE
+- MAPE
+
+Using the same metrics across all models ensures consistent evaluation.
+
+---
+
+## Decision 39 — RMSE-Based Model Ranking
+
+RMSE was selected as the primary ranking metric for the consolidated performance comparison.
+
+Models are sorted in ascending RMSE order, where a lower RMSE indicates better forecasting performance.
+
+The final model-selection decision will be made during Phase 8 using the consolidated results.
+
+---
+
+## Decision 40 — Consolidated Performance Artifacts
+
+The following artifacts were generated for Phase 7:
+
+```text
+reports/performance_comparison.csv
+reports/figures/performance_comparison.png
+
+---
+
