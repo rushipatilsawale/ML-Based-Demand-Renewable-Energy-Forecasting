@@ -699,6 +699,37 @@ ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5
 
 ---
 
+# Phase 7 — Performance Comparison
+
+A unified performance comparison was created across all forecasting approaches implemented in Phases 4, 5, and 6.
+
+## Compared Models
+
+- Naive 24h
+- Naive 168h
+- Linear Regression
+- Random Forest
+- Gradient Boosting
+- XGBoost
+- ARIMA
+- SARIMA
+
+## Evaluation Metrics
+
+- MAE
+- RMSE
+- MAPE
+
+## Generated Artifacts
+
+```text
+reports/performance_comparison.csv
+reports/figures/performance_comparison.png
+
+---
+
+
+
 # Project Progress
 
 | Phase | Description                              | Status      |
@@ -709,8 +740,8 @@ ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5
 |     4 | Baseline Forecasting                     | ✅ Completed |
 |     5 | Machine Learning Models                  | ✅ Completed |
 |     6 | Advanced Time-Series Models              | ✅ Completed |
-|     7 | Performance Comparison                   | ⏳ Next      |
-|     8 | Best Model Selection                     | ⏳ Pending   |
+|     7 | Performance Comparison                   | ✅ Completed |
+|     8 | Best Model Selection                     | ⏳ Next      |
 |     9 | Explainability                           | ⏳ Pending   |
 |    10 | Renewable Energy Forecasting             | ⏳ Pending   |
 |    11 | Uncertainty / Confidence Analysis        | ⏳ Pending   |
