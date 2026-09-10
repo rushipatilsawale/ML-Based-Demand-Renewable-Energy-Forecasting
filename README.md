@@ -698,7 +698,7 @@ reports/time_series_metrics.csv
 ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5 machine-learning models using MAE, RMSE, and MAPE.
 
 ---
-
+```
 # Phase 7 — Performance Comparison
 
 A unified performance comparison was created across all forecasting approaches implemented in Phases 4, 5, and 6.
@@ -725,11 +725,27 @@ A unified performance comparison was created across all forecasting approaches i
 ```text
 reports/performance_comparison.csv
 reports/figures/performance_comparison.png
-
+```
 ---
 
+# Phase 8 — Best Model Selection
 
+The best forecasting model was selected using the consolidated performance results generated in Phase 7.
 
+### Selection Criteria
+
+- **RMSE** — primary criterion
+- **MAE** — secondary criterion
+- **MAPE** — secondary criterion
+
+Lower metric values indicate better forecasting performance.
+
+### Generated Artifacts
+
+```text
+reports/best_model.csv
+reports/figures/best_model_comparison.png
+```
 # Project Progress
 
 | Phase | Description                              | Status      |
@@ -741,8 +757,8 @@ reports/figures/performance_comparison.png
 |     5 | Machine Learning Models                  | ✅ Completed |
 |     6 | Advanced Time-Series Models              | ✅ Completed |
 |     7 | Performance Comparison                   | ✅ Completed |
-|     8 | Best Model Selection                     | ⏳ Next      |
-|     9 | Explainability                           | ⏳ Pending   |
+|     8 | Best Model Selection                     | ✅ Completed |
+|     9 | Explainability                           | ⏳ Next      |
 |    10 | Renewable Energy Forecasting             | ⏳ Pending   |
 |    11 | Uncertainty / Confidence Analysis        | ⏳ Pending   |
 |    12 | Storage vs Backup Simulation             | ⏳ Pending   |

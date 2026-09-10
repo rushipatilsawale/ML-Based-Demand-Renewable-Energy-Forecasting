@@ -672,13 +672,13 @@ Phase 6 completed successfully.
 
 ---
 
-## Phase 7 — Performance Comparison
+# Phase 7 — Performance Comparison
 
 **Status: Completed**
 
 A unified performance comparison was created across all forecasting models developed in Phases 4, 5, and 6.
 
-### Models Compared
+## Models Compared
 
 - Naive 24h
 - Naive 168h
@@ -689,17 +689,41 @@ A unified performance comparison was created across all forecasting models devel
 - ARIMA
 - SARIMA
 
-### Evaluation Metrics
+## Evaluation Metrics
 
 - MAE — Mean Absolute Error
 - RMSE — Root Mean Squared Error
 - MAPE — Mean Absolute Percentage Error
 
-### Generated Outputs
+## Generated Outputs
 
 ```text
 reports/performance_comparison.csv
 reports/figures/performance_comparison.png
+
+---
+
+# Phase 8 — Best Model Selection
+
+**Status: Completed**
+
+The best forecasting model was selected from the consolidated Phase 7 performance results.
+
+## Selection Criteria
+
+Models were evaluated using:
+
+- RMSE — primary selection criterion
+- MAE — secondary criterion
+- MAPE — secondary criterion
+
+The models were ranked using their respective evaluation metrics, with lower values indicating better forecasting performance.
+
+## Generated Outputs
+
+```text
+reports/best_model.csv
+reports/figures/best_model_comparison.png
 
 ---
 
