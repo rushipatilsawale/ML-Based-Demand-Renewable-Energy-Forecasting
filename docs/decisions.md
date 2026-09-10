@@ -429,3 +429,39 @@ reports/figures/performance_comparison.png
 
 ---
 
+```
+# Phase 8 - Best Model Selection
+
+## Decision 41 — Best Model Selection
+
+The best forecasting model is selected from the consolidated Phase 7 comparison.
+
+RMSE is used as the primary selection criterion because it penalizes larger forecasting errors more strongly.
+
+MAE and MAPE are retained as supporting evaluation metrics.
+
+---
+
+## Decision 42 — Model Ranking
+
+Models are ranked using:
+
+1. RMSE
+2. MAE
+3. MAPE
+
+Lower values indicate better forecasting performance.
+
+The model with the lowest RMSE is selected as the primary forecasting model.
+
+---
+
+## Decision 43 — Best Model Artifact
+
+The selected forecasting model and its evaluation metrics are stored in:
+
+```text
+reports/best_model.csv
+
+---
+
