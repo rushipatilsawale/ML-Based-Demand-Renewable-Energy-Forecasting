@@ -462,6 +462,30 @@ The selected forecasting model and its evaluation metrics are stored in:
 
 ```text
 reports/best_model.csv
+```
+---
+
+# Phase 9 Decisions — Explainability
+
+## Decision 44 — Use SHAP
+SHAP was selected as the explainability method because it provides feature-level contribution analysis for individual predictions and global feature importance.
+
+## Decision 45 — Explain the selected best model
+The model selected in Phase 8 was used for explainability rather than selecting a different model.
+
+Selected model:
+- Linear Regression
+
+## Decision 46 — Use LinearExplainer
+Because the selected model is Linear Regression, SHAP LinearExplainer was used instead of TreeExplainer.
+
+## Decision 47 — Use the original training features
+The explainability pipeline uses the same 19 features used to train the Linear Regression model to prevent feature-dimension mismatch.
+
+## Decision 48 — Generate global importance plots
+Mean absolute SHAP values were used to rank feature importance and generate:
+- SHAP summary plot
+- SHAP bar plot
 
 ---
 

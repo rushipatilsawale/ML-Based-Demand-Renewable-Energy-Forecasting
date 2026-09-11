@@ -746,6 +746,29 @@ Lower metric values indicate better forecasting performance.
 reports/best_model.csv
 reports/figures/best_model_comparison.png
 ```
+---
+
+# Phase 9 — Explainability
+
+### Implemented SHAP-based explainability for the selected best forecasting model.
+
+Best model:
+- Linear Regression
+
+Method:
+- SHAP LinearExplainer
+
+### Generated outputs:
+- `reports/explainability_summary.csv`
+- `reports/figures/shap_summary.png`
+- `reports/figures/shap_bar.png`
+
+The analysis ranks the forecasting features according to their mean absolute SHAP contribution.
+
+Validation status: **PASSED**
+
+---
+
 # Project Progress
 
 | Phase | Description                              | Status      |
@@ -758,8 +781,8 @@ reports/figures/best_model_comparison.png
 |     6 | Advanced Time-Series Models              | ✅ Completed |
 |     7 | Performance Comparison                   | ✅ Completed |
 |     8 | Best Model Selection                     | ✅ Completed |
-|     9 | Explainability                           | ⏳ Next      |
-|    10 | Renewable Energy Forecasting             | ⏳ Pending   |
+|     9 | Explainability                           | ✅ Completed |
+|    10 | Renewable Energy Forecasting             | ⏳ Next      |
 |    11 | Uncertainty / Confidence Analysis        | ⏳ Pending   |
 |    12 | Storage vs Backup Simulation             | ⏳ Pending   |
 |    13 | Cost & CO₂ Impact Analysis               | ⏳ Pending   |

@@ -1,3 +1,5 @@
+import joblib
+import os
 import pandas as pd
 
 from sklearn.linear_model import LinearRegression
@@ -49,6 +51,16 @@ def create_regression_predictions():
 
     model = LinearRegression()
     model.fit(X_train, y_train)
+
+    # Save trained Linear Regression model
+    os.makedirs("models", exist_ok=True)
+
+    joblib.dump(
+        model,
+        "models/linear_regression.pkl"
+    )
+
+    print("Saved model: models/linear_regression.pkl")
 
     test_predictions = model.predict(X_test)
 
