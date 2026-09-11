@@ -700,7 +700,7 @@ A unified performance comparison was created across all forecasting models devel
 ```text
 reports/performance_comparison.csv
 reports/figures/performance_comparison.png
-
+```
 ---
 
 # Phase 8 — Best Model Selection
@@ -724,6 +724,34 @@ The models were ranked using their respective evaluation metrics, with lower val
 ```text
 reports/best_model.csv
 reports/figures/best_model_comparison.png
-
+```
 ---
 
+## Phase 9 — Explainability
+
+Status: COMPLETED
+
+Implemented SHAP-based explainability for the selected best ML forecasting model.
+
+Selected model:
+- Linear Regression
+
+Explainability method:
+- SHAP LinearExplainer
+
+Outputs:
+- reports/explainability_summary.csv
+- reports/figures/shap_summary.png
+- reports/figures/shap_bar.png
+
+The explainability pipeline calculates mean absolute SHAP importance for the model features and generates global feature-importance visualizations.
+
+Validation:
+- Explainability summary exists
+- Required columns verified
+- Feature uniqueness verified
+- SHAP importance values verified
+- Feature ranking verified
+- SHAP visualizations verified
+
+Final Phase 9 validation: PASSED
