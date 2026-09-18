@@ -727,7 +727,7 @@ reports/figures/best_model_comparison.png
 ```
 ---
 
-## Phase 9 — Explainability
+# Phase 9 — Explainability
 
 Status: COMPLETED
 
@@ -757,3 +757,80 @@ Validation:
 Final Phase 9 validation: PASSED
 
 ---
+
+# Phase 10 — Renewable Energy Forecasting
+
+Status: COMPLETED
+
+Implemented renewable energy forecasting components for solar and wind resources.
+
+## Solar Forecasting
+
+Solar generation data was prepared from the Indian solar generation dataset.
+
+Processing:
+- Inverter-level AC power aggregated to plant level
+- 15-minute generation data converted to hourly generation
+- Missing hourly generation values handled using linear interpolation within each plant
+
+Solar forecasting model:
+- Linear Regression
+- Chronological 80/20 train-test split
+- Temporal and lag-based features
+
+Outputs:
+- data/processed/solar_hourly.csv
+- data/processed/solar_train.csv
+- data/processed/solar_test.csv
+- models/solar/solar_linear_regression.pkl
+- reports/solar_metrics.csv
+
+## Wind Forecasting
+
+NASA POWER hourly wind-speed data was used as a meteorological wind-resource proxy for Delhi.
+
+Wind forecasting model:
+- Linear Regression
+- Chronological 80/20 train-test split
+- Temporal and lag-based features
+
+Outputs:
+- data/raw/renewable/nasa_power_wind_hourly.csv
+- data/processed/wind_train.csv
+- data/processed/wind_test.csv
+- models/wind/wind_linear_regression.pkl
+- reports/wind_metrics.csv
+
+## Wind Power Potential Estimation
+
+Wind-speed values were converted into estimated wind-power potential using a representative normalized turbine power curve.
+
+The estimated output is explicitly treated as wind-power potential and not as measured wind-generation data.
+
+Output:
+- data/processed/wind_power_estimates.csv
+
+## Renewable Evaluation
+
+Solar and wind forecasting metrics were evaluated and combined into a renewable-energy evaluation summary.
+
+Outputs:
+- reports/renewable_evaluation.csv
+- reports/figures/renewable_forecasting.png
+
+## Validation
+
+The following validations passed:
+
+- Solar data validation
+- Solar model validation
+- Wind data validation
+- Wind model validation
+- Wind power estimation validation
+- Renewable model evaluation
+- Final Phase 10 validation
+
+Final Phase 10 validation: PASSED
+
+---
+
