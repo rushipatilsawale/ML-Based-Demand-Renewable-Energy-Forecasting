@@ -489,3 +489,61 @@ Mean absolute SHAP values were used to rank feature importance and generate:
 
 ---
 
+# Phase 10 Decisions — Renewable Energy Forecasting
+
+## Decision 49 — Use separate renewable data sources
+
+Solar and wind resources were handled using separate datasets because a single synchronized Indian renewable-generation dataset covering the complete project period was not available for this implementation.
+
+## Decision 50 — Use Indian solar generation data
+
+The selected solar dataset contains generation data from two Indian solar plants.
+
+AC_POWER was used as the solar generation variable.
+
+The inverter-level generation records were aggregated to plant-level hourly generation.
+
+## Decision 51 — Use NASA POWER for wind resource forecasting
+
+NASA POWER hourly wind-speed data was selected as a wind-resource proxy.
+
+The data represents meteorological wind speed rather than measured turbine generation.
+
+Delhi coordinates were used to maintain geographic consistency with the project's India-focused demand and weather analysis.
+
+## Decision 52 — Forecast wind speed rather than measured wind generation
+
+Because the selected wind dataset provides meteorological wind speed rather than turbine SCADA generation, the model forecasts wind speed.
+
+The forecast is subsequently converted into estimated wind-power potential.
+
+## Decision 53 — Use a representative turbine power curve
+
+A normalized representative turbine power curve was used to convert wind speed into estimated power potential.
+
+The reference capacity is 1000 kW and is used only for normalization.
+
+The resulting values must not be interpreted as measured generation from an actual 1 MW turbine installation.
+
+## Decision 54 — Use Linear Regression
+
+Linear Regression was used for both solar and wind forecasting to maintain a consistent baseline modelling approach within the renewable forecasting phase.
+
+## Decision 55 — Maintain chronological validation
+
+An 80/20 chronological train-test split was used for renewable forecasting models to prevent future observations from being used to train the models.
+
+## Decision 56 — Document renewable data limitations
+
+The solar dataset covers approximately one month rather than the complete 2019–2024 demand period.
+
+The wind dataset represents meteorological wind speed and is not measured Indian wind-generation data.
+
+Therefore, Phase 10 results are presented as renewable forecasting and estimated renewable-power potential rather than a complete historical renewable-generation forecast for India.
+
+## Decision 57 — Continue renewable analysis in later phases
+
+The outputs generated in Phase 10 will be used as inputs for subsequent uncertainty analysis, storage-versus-backup simulation, and cost and CO₂ impact analysis.
+
+---
+
