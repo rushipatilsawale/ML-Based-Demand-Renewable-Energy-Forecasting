@@ -628,3 +628,47 @@ A synthetic demand profile was used for the simulation because the renewable for
 The resulting analysis is therefore a scenario study rather than a historical demand-storage reconstruction.
 
 ---
+
+# Phase 13 Decisions — Cost & CO₂ Impact Analysis
+
+## Decision 69 — Use Phase 12 backup results
+
+The Phase 12 backup requirements were used as the basis for cost and CO₂ calculations.
+
+## Decision 70 — Use a configurable electricity cost
+
+An electricity cost of ₹6.52/kWh was used as a scenario/reference assumption.
+
+The value is configurable and should not be interpreted as a universal electricity tariff.
+
+## Decision 71 — Use a grid emission factor
+
+A grid emission factor of 0.716 kg CO₂/kWh was used to estimate emissions associated with backup electricity.
+
+## Decision 72 — Calculate cost from backup energy
+
+Backup energy was multiplied by the electricity cost to calculate:
+
+- Cost without storage
+- Cost with storage
+- Cost savings
+
+## Decision 73 — Calculate CO₂ from backup energy
+
+Backup energy was multiplied by the grid emission factor to calculate:
+
+- CO₂ emissions without storage
+- CO₂ emissions with storage
+- CO₂ reduction
+
+## Decision 74 — Compare storage and backup scenarios
+
+The primary comparison is between the backup-only scenario and the storage scenario.
+
+## Decision 75 — Preserve Phase 12 limitations
+
+The cost and CO₂ analysis remains scenario-based because the underlying Phase 12 simulation uses a synthetic demand profile and solar forecast data.
+
+Therefore, the results should not be interpreted as a complete historical India-wide economic or emissions assessment.
+
+---
