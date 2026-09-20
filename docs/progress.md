@@ -933,3 +933,54 @@ Final Phase 12 validation: PASSED
 This is a scenario-based storage analysis using the available solar forecast period. It is not presented as a complete historical India-wide battery simulation.
 
 ---
+
+# Phase 13 — Cost & CO₂ Impact Analysis
+
+Status: COMPLETED
+
+Implemented cost and CO₂ impact analysis using the Phase 12 storage simulation results.
+
+## Analysis
+
+Calculated:
+
+- Backup electricity cost without storage
+- Backup electricity cost with storage
+- Cost savings from storage
+- CO₂ emissions without storage
+- CO₂ emissions with storage
+- CO₂ reduction from storage
+
+## Scenario Assumptions
+
+- Electricity cost: ₹6.52/kWh
+- Grid emission factor: 0.716 kg CO₂/kWh
+
+These values are scenario assumptions/reference factors and are not treated as universal electricity prices or emission factors for all Indian electricity consumers.
+
+## Outputs
+
+- data/processed/cost_co2_impact.csv
+- reports/cost_co2_summary.csv
+- reports/figures/cost_co2_impact.png
+
+## Validation
+
+The analysis validates:
+
+- Required columns
+- Missing values
+- Non-negative cost and CO₂ values
+- Storage backup requirement
+- Cost relationship between scenarios
+- CO₂ relationship between scenarios
+
+Final Phase 13 validation: PASSED
+
+## Phase 13 Limitation
+
+The cost and CO₂ results inherit the limitations of Phase 12.
+
+The analysis uses a scenario-based demand profile and solar-based renewable simulation rather than a complete historical grid-level dataset.
+
+---
