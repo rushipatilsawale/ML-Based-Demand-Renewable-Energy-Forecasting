@@ -588,3 +588,43 @@ The same uncertainty-analysis framework was applied to:
 The wind results represent uncertainty in predicted wind speed rather than measured wind generation.
 
 ---
+
+# Phase 12 Decisions — Storage vs Backup Simulation
+
+## Decision 64 — Use scenario-based simulation
+
+A scenario-based simulation was selected because the Phase 10 solar and wind datasets are not temporally synchronized with the complete historical demand dataset.
+
+## Decision 65 — Use solar forecast as renewable input
+
+Solar forecast data was used as the renewable-energy input because it represents renewable generation in kW.
+
+Wind-speed predictions were not directly added to renewable energy because wind speed is not equivalent to electrical power generation.
+
+## Decision 66 — Use a battery storage model
+
+A battery model was implemented with:
+
+- 5000 kWh capacity
+- 2500 kWh initial SOC
+- 1000 kW maximum charge rate
+- 1000 kW maximum discharge rate
+- 90% charge efficiency
+- 90% discharge efficiency
+
+## Decision 67 — Compare storage against backup-only operation
+
+Two scenarios were evaluated:
+
+- Backup without storage
+- Backup after renewable energy and battery storage
+
+This allows the reduction in backup requirement due to storage to be quantified.
+
+## Decision 68 — Use a scenario-based demand profile
+
+A synthetic demand profile was used for the simulation because the renewable forecasting period does not align with the complete historical demand dataset.
+
+The resulting analysis is therefore a scenario study rather than a historical demand-storage reconstruction.
+
+---

@@ -892,3 +892,44 @@ Phase 11 uncertainty calculation and validation completed successfully.
 Final Phase 11 validation: PASSED
 
 ---
+
+# Phase 12 — Storage vs Backup Simulation
+
+Status: COMPLETED
+
+Implemented a scenario-based battery storage versus backup simulation using the available solar forecast data.
+
+## Simulation
+
+The simulation compares:
+
+- Backup-only operation
+- Renewable energy with battery storage
+- Remaining backup requirement after battery discharge
+
+Battery assumptions:
+
+- Capacity: 5000 kWh
+- Initial state of charge: 2500 kWh
+- Maximum charge rate: 1000 kW
+- Maximum discharge rate: 1000 kW
+- Charge efficiency: 90%
+- Discharge efficiency: 90%
+
+A scenario-based demand profile was used because the Phase 10 renewable datasets are not temporally synchronized with the complete historical demand dataset.
+
+## Outputs
+
+- data/processed/storage_backup_simulation.csv
+- reports/storage_backup_summary.csv
+- reports/figures/storage_backup_comparison.png
+
+## Validation
+
+Final Phase 12 validation: PASSED
+
+## Limitation
+
+This is a scenario-based storage analysis using the available solar forecast period. It is not presented as a complete historical India-wide battery simulation.
+
+---

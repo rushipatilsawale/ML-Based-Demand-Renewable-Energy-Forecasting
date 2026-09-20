@@ -834,7 +834,7 @@ Therefore, these outputs are not presented as a complete 2019–2024 historical 
 
 ---
 
-### Phase 11 — Uncertainty / Confidence Analysis
+# Phase 11 — Uncertainty / Confidence Analysis
 
 Implemented prediction uncertainty analysis for solar and wind forecasting.
 
@@ -860,6 +860,40 @@ The wind uncertainty analysis represents predicted wind-speed uncertainty and sh
 
 ---
 
+# Phase 12 — Storage vs Backup Simulation
+
+Implemented a scenario-based battery storage simulation using solar renewable forecasts.
+
+Compared:
+
+- Backup-only operation
+- Renewable energy with battery storage
+- Remaining backup requirement after storage
+
+Battery configuration:
+
+- Capacity: 5000 kWh
+- Initial SOC: 2500 kWh
+- Charge efficiency: 90%
+- Discharge efficiency: 90%
+- Maximum charge/discharge rate: 1000 kW
+
+Outputs:
+
+- `data/processed/storage_backup_simulation.csv`
+- `reports/storage_backup_summary.csv`
+- `reports/figures/storage_backup_comparison.png`
+
+Validation status: **PASSED**
+
+### Phase 12 Limitation
+
+The simulation uses a scenario-based demand profile because the Phase 10 renewable datasets are not temporally synchronized with the complete historical demand dataset.
+
+Therefore, the results represent a scenario-based storage analysis rather than a complete historical India-wide storage simulation.
+
+---
+
 # Project Progress
 
 | Phase | Description                              | Status       |
@@ -875,8 +909,8 @@ The wind uncertainty analysis represents predicted wind-speed uncertainty and sh
 |     9 | Explainability                           | ✅ Completed |
 |    10 | Renewable Energy Forecasting             | ✅ Completed |
 |    11 | Uncertainty / Confidence Analysis        | ✅ Completed |
-|    12 | Storage vs Backup Simulation             | ⏳ Next      |
-|    13 | Cost & CO₂ Impact Analysis               | ⏳ Pending   |
+|    12 | Storage vs Backup Simulation             | ✅ Completed |
+|    13 | Cost & CO₂ Impact Analysis               | ⏳ Next      |
 |    14 | Dashboard & Final System                 | ⏳ Pending   |
 
 ---
