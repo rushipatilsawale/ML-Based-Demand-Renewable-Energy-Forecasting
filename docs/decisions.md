@@ -30,12 +30,12 @@ Historical hourly weather data was integrated with the electricity demand data.
 
 The selected weather variables are:
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+- Temperature
+- Relative humidity
+- Cloud cover
+- Precipitation
+- Wind speed
+- Solar radiation
 
 ---
 
@@ -72,12 +72,12 @@ The dataset passed all validation checks.
 
 The following basic time features were created during preprocessing:
 
-* hour
-* day
-* month
-* year
-* day of week
-* weekend indicator
+- hour
+- day
+- month
+- year
+- day of week
+- weekend indicator
 
 Additional forecasting features will be created during Phase 3.
 
@@ -103,12 +103,12 @@ National electricity demand is the primary target variable for the initial forec
 
 Demand was analyzed across:
 
-* Hour
-* Day
-* Month
-* Year
-* Weekday/weekend
-* Region
+- Hour
+- Day
+- Month
+- Year
+- Weekday/weekend
+- Region
 
 This was done to identify temporal patterns and seasonality before feature engineering.
 
@@ -166,12 +166,12 @@ Feature engineering will be completed before baseline and machine-learning forec
 
 The feature-engineering stage will focus on extracting predictive information from:
 
-* Historical demand
-* Weather
-* Calendar information
-* Temporal patterns
-* Lagged demand
-* Rolling statistics
+- Historical demand
+- Weather
+- Calendar information
+- Temporal patterns
+- Lagged demand
+- Rolling statistics
 
 ---
 
@@ -229,8 +229,8 @@ Seasonal naive forecasting was selected as the primary simple benchmark.
 
 Two seasonal periods were used:
 
-* 24 hours for daily seasonality
-* 168 hours for weekly seasonality
+- 24 hours for daily seasonality
+- 168 hours for weekly seasonality
 
 This provides simple benchmarks that future forecasting models must outperform.
 
@@ -250,9 +250,9 @@ This preserves the temporal structure of the forecasting problem and prevents fu
 
 The forecasting baselines are evaluated using:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 RMSE is particularly useful for identifying larger forecasting errors.
 
@@ -294,9 +294,9 @@ XGBoost Regressor was selected as an additional gradient-boosted tree model and 
 
 All baseline and machine-learning models are evaluated using the same:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 This allows direct and consistent comparison.
 
@@ -348,9 +348,9 @@ This decision was made because fitting a seasonal SARIMA model with 24-hour seas
 
 ARIMA and SARIMA were evaluated using the same metrics used in previous phases:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 They were also compared with the Phase 4 and Phase 5 forecasting models.
 
@@ -430,6 +430,7 @@ reports/figures/performance_comparison.png
 ---
 
 ```
+
 # Phase 8 - Best Model Selection
 
 ## Decision 41 — Best Model Selection
@@ -463,27 +464,35 @@ The selected forecasting model and its evaluation metrics are stored in:
 ```text
 reports/best_model.csv
 ```
+
 ---
 
 # Phase 9 Decisions — Explainability
 
 ## Decision 44 — Use SHAP
+
 SHAP was selected as the explainability method because it provides feature-level contribution analysis for individual predictions and global feature importance.
 
 ## Decision 45 — Explain the selected best model
+
 The model selected in Phase 8 was used for explainability rather than selecting a different model.
 
 Selected model:
+
 - Linear Regression
 
 ## Decision 46 — Use LinearExplainer
+
 Because the selected model is Linear Regression, SHAP LinearExplainer was used instead of TreeExplainer.
 
 ## Decision 47 — Use the original training features
+
 The explainability pipeline uses the same 19 features used to train the Linear Regression model to prevent feature-dimension mismatch.
 
 ## Decision 48 — Generate global importance plots
+
 Mean absolute SHAP values were used to rank feature importance and generate:
+
 - SHAP summary plot
 - SHAP bar plot
 
@@ -547,3 +556,35 @@ The outputs generated in Phase 10 will be used as inputs for subsequent uncertai
 
 ---
 
+# Phase 11 Decisions — Uncertainty / Confidence Analysis
+
+## Decision 58 — Use prediction intervals
+
+Uncertainty was represented using prediction intervals around the model's point predictions.
+
+## Decision 59 — Use residual-based uncertainty
+
+The test-set residual standard deviation was used to estimate prediction uncertainty.
+
+## Decision 60 — Use 95% confidence level
+
+A 95% prediction interval was selected for the uncertainty analysis.
+
+## Decision 61 — Apply non-negative bounds
+
+Solar generation and wind-speed predictions cannot be negative, so lower prediction bounds were clipped at zero.
+
+## Decision 62 — Evaluate interval coverage
+
+Interval coverage was calculated by checking whether the actual observation falls between the lower and upper prediction bounds.
+
+## Decision 63 — Apply uncertainty analysis to both renewable resources
+
+The same uncertainty-analysis framework was applied to:
+
+- Solar generation
+- Wind speed
+
+The wind results represent uncertainty in predicted wind speed rather than measured wind generation.
+
+---

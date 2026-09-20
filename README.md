@@ -52,17 +52,17 @@ Dashboard & Final System
 
 # Objectives
 
-* Forecast electricity demand using historical data.
-* Analyze the effect of weather and temporal patterns on electricity demand.
-* Develop machine-learning-based forecasting models.
-* Compare machine learning and advanced time-series approaches.
-* Select the best-performing forecasting model.
-* Provide model explainability.
-* Extend the system toward solar and wind energy forecasting.
-* Estimate forecasting uncertainty and confidence.
-* Simulate storage versus backup energy decisions.
-* Analyze potential cost and CO₂ impacts.
-* Develop a final dashboard for visualization and decision support.
+- Forecast electricity demand using historical data.
+- Analyze the effect of weather and temporal patterns on electricity demand.
+- Develop machine-learning-based forecasting models.
+- Compare machine learning and advanced time-series approaches.
+- Select the best-performing forecasting model.
+- Provide model explainability.
+- Extend the system toward solar and wind energy forecasting.
+- Estimate forecasting uncertainty and confidence.
+- Simulate storage versus backup energy decisions.
+- Analyze potential cost and CO₂ impacts.
+- Develop a final dashboard for visualization and decision support.
 
 ---
 
@@ -86,12 +86,12 @@ The primary demand dataset contains hourly electricity demand data for India.
 
 ### Demand Variables
 
-* National demand
-* Northern region demand
-* Western region demand
-* Eastern region demand
-* Southern region demand
-* North-Eastern region demand
+- National demand
+- Northern region demand
+- Western region demand
+- Eastern region demand
+- Southern region demand
+- North-Eastern region demand
 
 ---
 
@@ -101,12 +101,12 @@ Historical hourly weather data was integrated with the electricity demand data.
 
 ### Weather Variables
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+- Temperature
+- Relative humidity
+- Cloud cover
+- Precipitation
+- Wind speed
+- Solar radiation
 
 The weather data was obtained for Delhi using historical hourly weather information.
 
@@ -137,12 +137,12 @@ data/processed/demand_cleaned.csv
 
 Basic temporal features were also created:
 
-* Hour
-* Day
-* Month
-* Year
-* Day of week
-* Weekend indicator
+- Hour
+- Day
+- Month
+- Year
+- Day of week
+- Weekend indicator
 
 ## Weather Data
 
@@ -150,12 +150,12 @@ Historical hourly weather data was acquired and integrated with the demand data.
 
 Weather variables:
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+- Temperature
+- Relative humidity
+- Cloud cover
+- Precipitation
+- Wind speed
+- Solar radiation
 
 ## Dataset Integration
 
@@ -190,14 +190,14 @@ src/data/validate_merged.py
 
 Validation confirmed:
 
-* Correct row count
-* Correct columns
-* No missing values
-* No duplicate timestamps
-* Correct chronological order
-* Correct start date
-* Correct end date
-* Continuous hourly timestamps
+- Correct row count
+- Correct columns
+- No missing values
+- No duplicate timestamps
+- Correct chronological order
+- Correct start date
+- Correct end date
+- Continuous hourly timestamps
 
 ---
 
@@ -209,17 +209,17 @@ EDA was performed on the validated Phase 1 merged dataset.
 
 ## EDA Areas
 
-* Basic dataset analysis
-* Electricity demand analysis
-* Hourly demand patterns
-* Daily demand patterns
-* Monthly demand patterns
-* Yearly demand trends
-* Weekday vs weekend analysis
-* Regional demand analysis
-* Weather analysis
-* Demand-weather correlation analysis
-* Seasonality analysis
+- Basic dataset analysis
+- Electricity demand analysis
+- Hourly demand patterns
+- Daily demand patterns
+- Monthly demand patterns
+- Yearly demand trends
+- Weekday vs weekend analysis
+- Regional demand analysis
+- Weather analysis
+- Demand-weather correlation analysis
+- Seasonality analysis
 
 ## EDA Scripts
 
@@ -324,18 +324,18 @@ reports/figures/
 
 The figures include:
 
-* Average demand by hour
-* Average demand by day
-* Average demand by month
-* Average demand by year
-* Regional demand comparison
-* Temperature analysis
-* Solar radiation analysis
-* Wind speed analysis
-* Demand-weather correlation
-* Correlation matrix
-* Daily demand trend
-* Monthly demand trend
+- Average demand by hour
+- Average demand by day
+- Average demand by month
+- Average demand by year
+- Regional demand comparison
+- Temperature analysis
+- Solar radiation analysis
+- Wind speed analysis
+- Demand-weather correlation
+- Correlation matrix
+- Daily demand trend
+- Monthly demand trend
 
 ---
 
@@ -372,9 +372,9 @@ demand_lag_168h
 
 These represent:
 
-* Previous-hour demand
-* Previous-day demand
-* Previous-week demand
+- Previous-hour demand
+- Previous-day demand
+- Previous-week demand
 
 ## Rolling Features
 
@@ -418,10 +418,10 @@ data/processed/featured_dataset.csv
 
 The final feature dataset was validated for:
 
-* Missing values
-* Duplicate timestamps
-* Chronological ordering
-* Required engineered features
+- Missing values
+- Duplicate timestamps
+- Chronological ordering
+- Required engineered features
 
 ---
 
@@ -466,9 +466,9 @@ src/baseline/evaluate_baselines.py
 
 The baseline models were evaluated using:
 
-* MAE — Mean Absolute Error
-* RMSE — Root Mean Squared Error
-* MAPE — Mean Absolute Percentage Error
+- MAE — Mean Absolute Error
+- RMSE — Root Mean Squared Error
+- MAPE — Mean Absolute Percentage Error
 
 ## Generated Artifacts
 
@@ -626,9 +626,9 @@ XGBoost
 
 Evaluation metrics:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 Script:
 
@@ -656,13 +656,13 @@ src/models/validate_models.py
 
 Validation checks include:
 
-* Training dataset availability
-* Testing dataset availability
-* Model artifact availability
-* Prediction output availability
-* Evaluation metric availability
-* Required model coverage
-* Performance comparison output
+- Training dataset availability
+- Testing dataset availability
+- Model artifact availability
+- Prediction output availability
+- Evaluation metric availability
+- Required model coverage
+- Performance comparison output
 
 **Phase 5 completed successfully.**
 
@@ -699,6 +699,7 @@ ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5
 
 ---
 ```
+
 # Phase 7 — Performance Comparison
 
 A unified performance comparison was created across all forecasting approaches implemented in Phases 4, 5, and 6.
@@ -726,6 +727,7 @@ A unified performance comparison was created across all forecasting approaches i
 reports/performance_comparison.csv
 reports/figures/performance_comparison.png
 ```
+
 ---
 
 # Phase 8 — Best Model Selection
@@ -746,6 +748,7 @@ Lower metric values indicate better forecasting performance.
 reports/best_model.csv
 reports/figures/best_model_comparison.png
 ```
+
 ---
 
 # Phase 9 — Explainability
@@ -753,12 +756,15 @@ reports/figures/best_model_comparison.png
 ### Implemented SHAP-based explainability for the selected best forecasting model.
 
 Best model:
+
 - Linear Regression
 
 Method:
+
 - SHAP LinearExplainer
 
 ### Generated outputs:
+
 - `reports/explainability_summary.csv`
 - `reports/figures/shap_summary.png`
 - `reports/figures/shap_bar.png`
@@ -781,6 +787,7 @@ Implemented solar and wind renewable-energy forecasting components.
 - Temporal and lag-based features
 
 Outputs:
+
 - `data/processed/solar_hourly.csv`
 - `data/processed/solar_train.csv`
 - `data/processed/solar_test.csv`
@@ -794,6 +801,7 @@ Outputs:
 - Temporal and lag-based features
 
 Outputs:
+
 - `data/raw/renewable/nasa_power_wind_hourly.csv`
 - `data/processed/wind_train.csv`
 - `data/processed/wind_test.csv`
@@ -826,12 +834,36 @@ Therefore, these outputs are not presented as a complete 2019–2024 historical 
 
 ---
 
+### Phase 11 — Uncertainty / Confidence Analysis
 
+Implemented prediction uncertainty analysis for solar and wind forecasting.
+
+Method:
+
+- Residual-based prediction intervals
+- 95% confidence level
+- Test-set residual standard deviation
+- Prediction interval coverage analysis
+
+Outputs:
+
+- `data/processed/solar_uncertainty.csv`
+- `data/processed/wind_uncertainty.csv`
+- `reports/uncertainty_summary.csv`
+- `reports/figures/uncertainty_intervals.png`
+
+Each prediction contains a point estimate together with lower and upper prediction bounds.
+
+Validation status: **PASSED**
+
+The wind uncertainty analysis represents predicted wind-speed uncertainty and should not be interpreted as uncertainty in measured wind generation.
+
+---
 
 # Project Progress
 
-| Phase | Description                              | Status      |
-| ----: | ---------------------------------------- | ----------- |
+| Phase | Description                              | Status       |
+| ----: | ---------------------------------------- | ------------ |
 |     1 | Data Acquisition, Cleaning & Integration | ✅ Completed |
 |     2 | Exploratory Data Analysis                | ✅ Completed |
 |     3 | Feature Engineering                      | ✅ Completed |
@@ -842,8 +874,8 @@ Therefore, these outputs are not presented as a complete 2019–2024 historical 
 |     8 | Best Model Selection                     | ✅ Completed |
 |     9 | Explainability                           | ✅ Completed |
 |    10 | Renewable Energy Forecasting             | ✅ Completed |
-|    11 | Uncertainty / Confidence Analysis        | ⏳ Next      |
-|    12 | Storage vs Backup Simulation             | ⏳ Pending   |
+|    11 | Uncertainty / Confidence Analysis        | ✅ Completed |
+|    12 | Storage vs Backup Simulation             | ⏳ Next      |
 |    13 | Cost & CO₂ Impact Analysis               | ⏳ Pending   |
 |    14 | Dashboard & Final System                 | ⏳ Pending   |
 
@@ -875,13 +907,13 @@ Phase 6 has **not yet been implemented**.
 
 The later stages of the project will incorporate renewable-energy-related components including:
 
-* Solar energy forecasting
-* Wind energy forecasting
-* Renewable supply analysis
-* Uncertainty and confidence estimation
-* Storage versus backup simulation
-* Cost analysis
-* CO₂ impact analysis
+- Solar energy forecasting
+- Wind energy forecasting
+- Renewable supply analysis
+- Uncertainty and confidence estimation
+- Storage versus backup simulation
+- Cost analysis
+- CO₂ impact analysis
 
 Actual solar and wind generation data and CO₂ calculations are intentionally reserved for their planned later stages rather than being forced into the Phase 1 demand-weather dataset.
 
@@ -889,18 +921,18 @@ Actual solar and wind generation data and CO₂ calculations are intentionally r
 
 # Technologies
 
-* Python
-* Pandas
-* NumPy
-* Matplotlib
-* Scikit-learn
-* XGBoost
-* Joblib
-* Statsmodels
-* Time-Series Forecasting
-* Machine Learning
-* Explainable AI
-* Data Visualization
+- Python
+- Pandas
+- NumPy
+- Matplotlib
+- Scikit-learn
+- XGBoost
+- Joblib
+- Statsmodels
+- Time-Series Forecasting
+- Machine Learning
+- Explainable AI
+- Data Visualization
 
 Additional libraries will be introduced as required by later phases.
 
