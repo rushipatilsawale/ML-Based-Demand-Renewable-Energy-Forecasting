@@ -1,0 +1,3 @@
+energy_source,confidence_level,mean_prediction,mean_interval_width,interval_coverage
+Solar,0.95,5548.329175331923,5874.2418103380105,0.930379746835443
+Wind Speed,0.95,2.807233672621677,1.7125676114284263,0.9424044534846376

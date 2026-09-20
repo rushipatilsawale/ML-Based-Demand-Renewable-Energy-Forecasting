@@ -56,22 +56,22 @@ data/raw/hourlyLoadDataIndia.xlsx
 
 ### Dataset details
 
-* Time period: 2019-01-01 to 2024-04-30
-* Frequency: Hourly
-* Records: 46,728
-* Contains national and regional electricity demand
-* No missing values
-* No duplicate timestamps
-* Correct hourly continuity
+- Time period: 2019-01-01 to 2024-04-30
+- Frequency: Hourly
+- Records: 46,728
+- Contains national and regional electricity demand
+- No missing values
+- No duplicate timestamps
+- Correct hourly continuity
 
 ### Demand regions
 
-* National
-* Northern
-* Western
-* Eastern
-* Southern
-* North-Eastern
+- National
+- Northern
+- Western
+- Eastern
+- Southern
+- North-Eastern
 
 ---
 
@@ -87,12 +87,12 @@ data/raw/weather_hourly.csv
 
 ### Weather variables
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+- Temperature
+- Relative humidity
+- Cloud cover
+- Precipitation
+- Wind speed
+- Solar radiation
 
 The weather data covers the same period and hourly timestamps as the demand data.
 
@@ -115,12 +115,12 @@ data/processed/demand_cleaned.csv
 
 Additional time-based variables were created:
 
-* hour
-* day
-* month
-* year
-* day of week
-* weekend indicator
+- hour
+- day
+- month
+- year
+- day of week
+- weekend indicator
 
 ---
 
@@ -140,10 +140,10 @@ data/processed/final_merged_dataset.csv
 
 ### Final dataset
 
-* Rows: 46,728
-* Columns: 19
-* Start: 2019-01-01 00:00:00
-* End: 2024-04-30 23:00:00
+- Rows: 46,728
+- Columns: 19
+- Start: 2019-01-01 00:00:00
+- End: 2024-04-30 23:00:00
 
 ### Validation
 
@@ -155,14 +155,14 @@ src/data/validate_merged.py
 
 Validation completed successfully for:
 
-* Expected row count
-* Expected columns
-* Missing values
-* Duplicate timestamps
-* Chronological ordering
-* Start date
-* End date
-* Hourly continuity
+- Expected row count
+- Expected columns
+- Missing values
+- Duplicate timestamps
+- Chronological ordering
+- Start date
+- End date
+- Hourly continuity
 
 **Phase 1 completed successfully.**
 
@@ -197,12 +197,12 @@ src/eda/seasonality_analysis.py
 
 Completed:
 
-* Dataset shape analysis
-* Column analysis
-* Missing-value analysis
-* Duplicate analysis
-* Date-range analysis
-* Numerical statistics
+- Dataset shape analysis
+- Column analysis
+- Missing-value analysis
+- Duplicate analysis
+- Date-range analysis
+- Numerical statistics
 
 The final dataset contains:
 
@@ -219,12 +219,12 @@ No missing values or duplicate timestamps were found.
 
 Completed:
 
-* Average demand by hour
-* Average demand by day
-* Average demand by month
-* Average demand by year
-* Weekday vs weekend demand
-* Regional demand comparison
+- Average demand by hour
+- Average demand by day
+- Average demand by month
+- Average demand by year
+- Weekday vs weekend demand
+- Regional demand comparison
 
 ### Important observations
 
@@ -276,12 +276,12 @@ Weekend average demand:
 
 Completed analysis of:
 
-* Temperature
-* Relative humidity
-* Cloud cover
-* Precipitation
-* Wind speed
-* Solar radiation
+- Temperature
+- Relative humidity
+- Cloud cover
+- Precipitation
+- Wind speed
+- Solar radiation
 
 Hourly weather patterns were also analyzed.
 
@@ -311,9 +311,9 @@ A complete correlation matrix was generated.
 
 Completed:
 
-* Daily demand trend
-* Monthly demand trend
-* Seasonal demand behavior
+- Daily demand trend
+- Monthly demand trend
+- Seasonal demand behavior
 
 Monthly and long-term demand patterns were analyzed to identify temporal characteristics useful for forecasting.
 
@@ -353,8 +353,8 @@ monthly_demand_trend.png
 
 # Current Project Status
 
-| Phase    | Description                              | Status      |
-| -------- | ---------------------------------------- | ----------- |
+| Phase    | Description                              | Status       |
+| -------- | ---------------------------------------- | ------------ |
 | Phase 1  | Data Acquisition, Cleaning & Integration | ✅ Completed |
 | Phase 2  | Exploratory Data Analysis                | ✅ Completed |
 | Phase 3  | Feature Engineering                      | ⏳ Next      |
@@ -420,7 +420,7 @@ Generated:
 
 Intermediate datasets:
 
-```text
+````text
 data/processed/time_features.csv
 data/processed/lag_features.csv
 data/processed/rolling_features.csv
@@ -505,15 +505,15 @@ Generated:
 ```text
 data/processed/ml_train.csv
 data/processed/ml_test.csv
-```
+````
 
 ## 5.2 Machine Learning Models
 
 Three regression models were implemented:
 
-* Random Forest Regressor
-* Gradient Boosting Regressor
-* XGBoost Regressor
+- Random Forest Regressor
+- Gradient Boosting Regressor
+- XGBoost Regressor
 
 Generated model artifacts:
 
@@ -529,18 +529,18 @@ The machine-learning models were evaluated alongside the Phase 4 baseline models
 
 Models compared:
 
-* Naive 24h
-* Naive 168h
-* Linear Regression
-* Random Forest
-* Gradient Boosting
-* XGBoost
+- Naive 24h
+- Naive 168h
+- Linear Regression
+- Random Forest
+- Gradient Boosting
+- XGBoost
 
 Evaluation metrics:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 Generated:
 
@@ -563,12 +563,12 @@ The comparison provides a common benchmark for selecting models for subsequent p
 
 The following were validated:
 
-* Training and testing datasets
-* All three trained model artifacts
-* Prediction output
-* Evaluation metrics
-* Required model coverage
-* Performance comparison visualization
+- Training and testing datasets
+- All three trained model artifacts
+- Prediction output
+- Evaluation metrics
+- Required model coverage
+- Performance comparison visualization
 
 **Phase 5 completed successfully.**
 
@@ -584,8 +584,8 @@ Phase 6 introduced classical statistical time-series forecasting models to compl
 
 The engineered dataset was converted into a dedicated time-series dataset containing:
 
-* `datetime`
-* `national_demand_mw`
+- `datetime`
+- `national_demand_mw`
 
 The data was sorted chronologically and divided using the existing 80/20 chronological train-test strategy.
 
@@ -634,18 +634,18 @@ models/sarima.pkl
 
 ARIMA and SARIMA forecasts were generated for the Phase 5 test period and compared with:
 
-* Naive 24h
-* Naive 168h
-* Linear Regression
-* Random Forest
-* Gradient Boosting
-* XGBoost
+- Naive 24h
+- Naive 168h
+- Linear Regression
+- Random Forest
+- Gradient Boosting
+- XGBoost
 
 Evaluation metrics:
 
-* MAE
-* RMSE
-* MAPE
+- MAE
+- RMSE
+- MAPE
 
 Generated:
 
@@ -658,15 +658,15 @@ reports/time_series_metrics.csv
 
 The following were validated:
 
-* ARIMA model artifact
-* SARIMA model artifact
-* Time-series train/test datasets
-* Chronological ordering
-* Duplicate timestamps
-* Forecast columns
-* Missing predictions
-* Evaluation metrics
-* Required model coverage
+- ARIMA model artifact
+- SARIMA model artifact
+- Time-series train/test datasets
+- Chronological ordering
+- Duplicate timestamps
+- Forecast columns
+- Missing predictions
+- Evaluation metrics
+- Required model coverage
 
 Phase 6 completed successfully.
 
@@ -701,6 +701,7 @@ A unified performance comparison was created across all forecasting models devel
 reports/performance_comparison.csv
 reports/figures/performance_comparison.png
 ```
+
 ---
 
 # Phase 8 — Best Model Selection
@@ -725,6 +726,7 @@ The models were ranked using their respective evaluation metrics, with lower val
 reports/best_model.csv
 reports/figures/best_model_comparison.png
 ```
+
 ---
 
 # Phase 9 — Explainability
@@ -734,12 +736,15 @@ Status: COMPLETED
 Implemented SHAP-based explainability for the selected best ML forecasting model.
 
 Selected model:
+
 - Linear Regression
 
 Explainability method:
+
 - SHAP LinearExplainer
 
 Outputs:
+
 - reports/explainability_summary.csv
 - reports/figures/shap_summary.png
 - reports/figures/shap_bar.png
@@ -747,6 +752,7 @@ Outputs:
 The explainability pipeline calculates mean absolute SHAP importance for the model features and generates global feature-importance visualizations.
 
 Validation:
+
 - Explainability summary exists
 - Required columns verified
 - Feature uniqueness verified
@@ -769,16 +775,19 @@ Implemented renewable energy forecasting components for solar and wind resources
 Solar generation data was prepared from the Indian solar generation dataset.
 
 Processing:
+
 - Inverter-level AC power aggregated to plant level
 - 15-minute generation data converted to hourly generation
 - Missing hourly generation values handled using linear interpolation within each plant
 
 Solar forecasting model:
+
 - Linear Regression
 - Chronological 80/20 train-test split
 - Temporal and lag-based features
 
 Outputs:
+
 - data/processed/solar_hourly.csv
 - data/processed/solar_train.csv
 - data/processed/solar_test.csv
@@ -790,11 +799,13 @@ Outputs:
 NASA POWER hourly wind-speed data was used as a meteorological wind-resource proxy for Delhi.
 
 Wind forecasting model:
+
 - Linear Regression
 - Chronological 80/20 train-test split
 - Temporal and lag-based features
 
 Outputs:
+
 - data/raw/renewable/nasa_power_wind_hourly.csv
 - data/processed/wind_train.csv
 - data/processed/wind_test.csv
@@ -808,6 +819,7 @@ Wind-speed values were converted into estimated wind-power potential using a rep
 The estimated output is explicitly treated as wind-power potential and not as measured wind-generation data.
 
 Output:
+
 - data/processed/wind_power_estimates.csv
 
 ## Renewable Evaluation
@@ -815,6 +827,7 @@ Output:
 Solar and wind forecasting metrics were evaluated and combined into a renewable-energy evaluation summary.
 
 Outputs:
+
 - reports/renewable_evaluation.csv
 - reports/figures/renewable_forecasting.png
 
@@ -834,3 +847,48 @@ Final Phase 10 validation: PASSED
 
 ---
 
+# Phase 11 — Uncertainty / Confidence Analysis
+
+Status: COMPLETED
+
+Implemented uncertainty analysis for solar and wind forecasting predictions.
+
+## Method
+
+Residual-based 95% prediction intervals were calculated using the test-set residual standard deviation.
+
+Each prediction includes:
+
+- Point prediction
+- Lower prediction bound
+- Upper prediction bound
+- Confidence level
+
+## Solar Uncertainty
+
+Output:
+
+- data/processed/solar_uncertainty.csv
+
+## Wind Uncertainty
+
+Output:
+
+- data/processed/wind_uncertainty.csv
+
+## Uncertainty Summary
+
+Generated:
+
+- reports/uncertainty_summary.csv
+- reports/figures/uncertainty_intervals.png
+
+The summary reports mean prediction, average prediction-interval width, and interval coverage.
+
+## Validation
+
+Phase 11 uncertainty calculation and validation completed successfully.
+
+Final Phase 11 validation: PASSED
+
+---
