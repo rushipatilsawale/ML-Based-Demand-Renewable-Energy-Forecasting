@@ -1,0 +1,7 @@
+metric,value
+Total Backup Without Storage (kWh),190966.79082400014
+Total Backup With Storage (kWh),159101.81266700954
+Total Storage Discharge (kWh),31864.97815699061
+Backup Reduction (kWh),31864.978156990604
+Backup Reduction (%),16.686135856133323
+Battery Capacity (kWh),5000.0
