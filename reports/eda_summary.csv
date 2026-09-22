@@ -1,0 +1,10 @@
+metric,value
+rows,46728
+missing_values,0
+duplicate_timestamps,0
+start,2019-01-01 00:00:00
+end,2024-04-30 23:00:00
+facility_scale_kw_per_mw,0.06
+mean_national_demand_mw,160487.06566726588
+mean_combined_renewable_kw,196.76090683416416
+mean_energy_balance_kw,-9432.463033201788

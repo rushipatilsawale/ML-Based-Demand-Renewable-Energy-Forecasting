@@ -1,1839 +1,286 @@
 # ML-Based Demand & Renewable Energy Forecasting
 
-An end-to-end machine learning and time-series forecasting project for electricity demand and renewable-resource forecasting, extended into uncertainty analysis, scenario-based storage and backup simulation, cost and CO₂ impact analysis, and an interactive dashboard for energy decision support.
+A real-time, multi-horizon electricity-demand and renewable-energy forecasting system for India, extended into a scenario-based dispatch simulator, CO₂ / backup-cost impact analysis, SHAP explainability of those calculations, and a 4-tab Streamlit decision-support dashboard.
+
+The system **learns from four aligned historical datasets**, trains a best model per target, and then **forecasts forward from the actual current moment** (anchored to the present hour in IST), producing hourly / daily / weekly / monthly projections with lower and upper bounds.
 
 ---
 
-## Project Overview
+## 1. What this project does (plain language)
 
-Electricity demand varies continuously with time, weather, seasonal conditions, and human activity.
-
-This project develops a forecasting system that combines historical electricity demand, weather information, machine learning, and advanced time-series techniques to forecast future energy requirements.
-
-The project progressively expands from electricity demand forecasting toward renewable energy forecasting and energy-management analysis.
-
----
-
-# Project Pipeline
-
-```text
-
-Data Acquisition
-
-       ↓
-
-Data Cleaning & Integration
-
-       ↓
-
-Exploratory Data Analysis
-
-       ↓
-
-Feature Engineering
-
-       ↓
-
-Baseline Forecasting
-
-       ↓
-
-Machine Learning Models
-
-       ↓
-
-Advanced Time-Series Models
-
-       ↓
-
-Performance Comparison
-
-       ↓
-
-Best Model Selection
-
-       ↓
-
-Explainability
-
-       ↓
-
-Renewable Energy Forecasting
-
-       ↓
-
-Uncertainty / Confidence Analysis
-
-       ↓
-
-Storage vs Backup Simulation
-
-       ↓
-
-Cost & CO₂ Impact
-
-       ↓
-
-Dashboard & Final System
-
-```
+1. **Acquire** four datasets — electricity demand, weather, wind resource, solar potential.
+2. **Preprocess** — inspect, clean, align all four on a common hourly timestamp, run EDA, and engineer leakage-safe features (hourly / daily / weekly / monthly patterns).
+3. **Train** several candidate models per target and **auto-select the best** by validation RMSE.
+4. **Forecast in real time** — starting at *now*, recursively project demand, solar and wind forward 12 months, with widening 95% intervals.
+5. **Simulate dispatch** — for any selected hour/scenario, decide renewable use → battery charge/discharge → grid backup.
+6. **Quantify impact** — CO₂ avoided and backup-fuel cost saved versus a no-storage counterfactual.
+7. **Explain with SHAP** — explain the *dispatch, CO₂ and cost* calculations (not model selection).
+8. **Dashboard** — exactly **4 tabs** (Hourly, Daily, Weekly, Monthly), each with a ranged table, one bounds chart, a scenario dispatch simulator, and a point-wise explanation block.
 
 ---
 
-# Objectives
+## 2. System architecture
 
-- Forecast electricity demand using historical data.
+```text
+        ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+        │ Demand (Kaggle│  │ Weather       │  │ Wind (NASA    │  │ Solar (PVGIS 6│
+        │ hourly India) │  │ (Open-Meteo)  │  │ POWER WS10M)  │  │ 1 MWp Delhi)  │
+        └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘
+                └──────────────────┴───────┬───────────┴──────────────────┘
+                                           ▼
+                       build_aligned_dataset.py  (inner-join on hourly timestamp)
+                                           │  → aligned_hourly_dataset.csv (46,728 × 23)
+                                           ▼
+                       run_aligned_eda.py  → reports/*.csv + figures
+                                           ▼
+                       build_forecast_features.py (leakage-safe lags/rolling/calendar)
+                                           │  → forecast_features.csv (46,560 × 51)
+                                           ▼
+                       train_realtime_models.py (3 targets × 3 candidates, auto-select)
+                                           │  → models/realtime_forecasters.joblib
+                                           │  → reports/realtime_model_metrics.csv
+                                           ▼
+        live_weather.py (Open-Meteo, next 16 d) ──┐
+                                                 ▼
+                       realtime_forecast.py (recursive, anchored at NOW IST)
+                                           │  → forecasts/hourly|daily|weekly|monthly_forecast.csv
+                                           │  → forecasts/future_features.csv
+                                           ▼
+                       operations.py (facility scaling · dispatch scenario · impact)
+                                           ▼
+                       explain_dispatch.py (SHAP on dispatch / CO₂ / cost)
+                                           ▼
+                       app/dashboard.py (4 tabs: Hourly · Daily · Weekly · Monthly)
+```
 
-- Analyze the effect of weather and temporal patterns on electricity demand.
-
-- Develop machine-learning-based forecasting models.
-
-- Compare machine learning and advanced time-series approaches.
-
-- Select the best-performing forecasting model.
-
-- Provide model explainability.
-
-- Extend the system toward solar and wind energy forecasting.
-
-- Estimate forecasting uncertainty and confidence.
-
-- Simulate storage versus backup energy decisions.
-
-- Analyze potential cost and CO₂ impacts.
-
-- Develop a final dashboard for visualization and decision support.
+**Design rule:** the dashboard only *reads* cached CSVs and the persisted model pack. The expensive 12-month recursion is run once as a batch step; the UI never retrains or re-recurses on startup.
 
 ---
 
-# Dataset
-
-## Electricity Demand
-
-The primary demand dataset contains hourly electricity demand data for India.
-
-### Period
+## 3. Project structure (current, cleaned)
 
 ```text
-
-2019-01-01 → 2024-04-30
-
-```
-
-### Records
-
-```text
-
-46,728 hourly records
-
-```
-
-### Demand Variables
-
-- National demand
-
-- Northern region demand
-
-- Western region demand
-
-- Eastern region demand
-
-- Southern region demand
-
-- North-Eastern region demand
-
----
-
-## Weather
-
-Historical hourly weather data was integrated with the electricity demand data.
-
-### Weather Variables
-
-- Temperature
-
-- Relative humidity
-
-- Cloud cover
-
-- Precipitation
-
-- Wind speed
-
-- Solar radiation
-
-The weather data was obtained for Delhi using historical hourly weather information.
-
----
-
-# Phase 1 — Data Acquisition, Cleaning & Integration
-
-**Status: ✅ Completed**
-
-Phase 1 established the validated demand-weather dataset used by the subsequent analysis and forecasting stages.
-
-## Demand Data Processing
-
-Raw demand data was inspected and cleaned.
-
-Scripts:
-
-```text
-
-src/data/inspect_demand.py
-
-src/data/clean_demand.py
-
-```
-
-Generated:
-
-```text
-
-data/processed/demand_cleaned.csv
-
-```
-
-Basic temporal features were also created:
-
-- Hour
-
-- Day
-
-- Month
-
-- Year
-
-- Day of week
-
-- Weekend indicator
-
-## Weather Data
-
-Historical hourly weather data was acquired and integrated with the demand data.
-
-Weather variables:
-
-- Temperature
-
-- Relative humidity
-
-- Cloud cover
-
-- Precipitation
-
-- Wind speed
-
-- Solar radiation
-
-## Dataset Integration
-
-Script:
-
-```text
-
-src/data/merge_data.py
-
-```
-
-Generated:
-
-```text
-
-data/processed/final_merged_dataset.csv
-
-```
-
-## Final Dataset
-
-```text
-
-Rows    : 46,728
-
-Columns : 19
-
-Start   : 2019-01-01 00:00:00
-
-End     : 2024-04-30 23:00:00
-
-```
-
-## Validation
-
-Script:
-
-```text
-
-src/data/validate_merged.py
-
-```
-
-Validation confirmed:
-
-- Correct row count
-
-- Correct columns
-
-- No missing values
-
-- No duplicate timestamps
-
-- Correct chronological order
-
-- Correct start date
-
-- Correct end date
-
-- Continuous hourly timestamps
-
----
-
-# Phase 2 — Exploratory Data Analysis
-
-**Status: ✅ Completed**
-
-EDA was performed on the validated Phase 1 merged dataset.
-
-## EDA Areas
-
-- Basic dataset analysis
-
-- Electricity demand analysis
-
-- Hourly demand patterns
-
-- Daily demand patterns
-
-- Monthly demand patterns
-
-- Yearly demand trends
-
-- Weekday vs weekend analysis
-
-- Regional demand analysis
-
-- Weather analysis
-
-- Demand-weather correlation analysis
-
-- Seasonality analysis
-
-## EDA Scripts
-
-```text
-
-src/eda/__init__.py
-
-src/eda/basic_eda.py
-
-src/eda/demand_analysis.py
-
-src/eda/weather_analysis.py
-
-src/eda/correlation_analysis.py
-
-src/eda/seasonality_analysis.py
-
-```
-
-## Important EDA Findings
-
-Average national electricity demand:
-
-```text
-
-160,487.07 MW
-
-```
-
-Highest average demand hour:
-
-```text
-
-11:00
-
-```
-
-Average demand at 11:00:
-
-```text
-
-173,085.39 MW
-
-```
-
-Lowest average demand hour:
-
-```text
-
-03:00
-
-```
-
-Average demand at 03:00:
-
-```text
-
-143,526.45 MW
-
-```
-
-Average weekday demand:
-
-```text
-
-161,412.76 MW
-
-```
-
-Average weekend demand:
-
-```text
-
-158,171.17 MW
-
-```
-
-## Weather Statistics
-
-Average temperature:
-
-```text
-
-24.05 °C
-
-```
-
-Average relative humidity:
-
-```text
-
-62.61 %
-
-```
-
-Average cloud cover:
-
-```text
-
-31.94 %
-
-```
-
-Average precipitation:
-
-```text
-
-0.08 mm
-
-```
-
-Average wind speed:
-
-```text
-
-9.73 km/h
-
-```
-
-Average solar radiation:
-
-```text
-
-202.42 W/m²
-
-```
-
-## EDA Visualizations
-
-Generated visualizations are stored in:
-
-```text
-
-reports/figures/
-
-```
-
-The figures include:
-
-- Average demand by hour
-
-- Average demand by day
-
-- Average demand by month
-
-- Average demand by year
-
-- Regional demand comparison
-
-- Temperature analysis
-
-- Solar radiation analysis
-
-- Wind speed analysis
-
-- Demand-weather correlation
-
-- Correlation matrix
-
-- Daily demand trend
-
-- Monthly demand trend
-
----
-
-# Phase 3 — Feature Engineering
-
-**Status: ✅ Completed**
-
-Feature engineering was performed using the validated Phase 1 dataset and findings from Phase 2 EDA.
-
-## Time-Based Features
-
-Cyclical time features were created:
-
-```text
-
-hour_sin
-
-hour_cos
-
-month_sin
-
-month_cos
-
-day_of_week_sin
-
-day_of_week_cos
-
-```
-
-These represent recurring temporal patterns in a machine-learning-friendly form.
-
-## Lag Features
-
-Historical demand features were created:
-
-```text
-
-demand_lag_1h
-
-demand_lag_24h
-
-demand_lag_168h
-
-```
-
-These represent:
-
-- Previous-hour demand
-
-- Previous-day demand
-
-- Previous-week demand
-
-## Rolling Features
-
-Rolling demand statistics were created:
-
-```text
-
-demand_rolling_mean_24h
-
-demand_rolling_std_24h
-
-demand_rolling_mean_168h
-
-demand_rolling_std_168h
-
-```
-
-Rolling calculations use shifted demand values to avoid target leakage.
-
-## Feature Engineering Scripts
-
-```text
-
-src/features/__init__.py
-
-src/features/create_time_features.py
-
-src/features/create_lag_features.py
-
-src/features/create_rolling_features.py
-
-src/features/create_features.py
-
-src/features/validate_features.py
-
-```
-
-## Feature Datasets
-
-Intermediate datasets:
-
-```text
-
-data/processed/time_features.csv
-
-data/processed/lag_features.csv
-
-data/processed/rolling_features.csv
-
-```
-
-Final feature dataset:
-
-```text
-
-data/processed/featured_dataset.csv
-
-```
-
-The final feature dataset was validated for:
-
-- Missing values
-
-- Duplicate timestamps
-
-- Chronological ordering
-
-- Required engineered features
-
----
-
-# Phase 4 — Baseline Forecasting
-
-**Status: ✅ Completed**
-
-Baseline forecasting was implemented to establish benchmark performance before training machine-learning and advanced time-series models.
-
-## Baseline Models
-
-### Seasonal Naive — 24 Hours
-
-Uses demand from the previous day as the prediction.
-
-```text
-
-naive_24h = demand(t - 24)
-
-```
-
-### Seasonal Naive — 168 Hours
-
-Uses demand from the previous week as the prediction.
-
-```text
-
-naive_168h = demand(t - 168)
-
-```
-
-### Linear Regression
-
-A linear regression model was implemented using temporal, lag, rolling, and weather features.
-
-## Baseline Scripts
-
-```text
-
-src/baseline/__init__.py
-
-src/baseline/naive_baseline.py
-
-src/baseline/regression_baseline.py
-
-src/baseline/evaluate_baselines.py
-
-```
-
-## Evaluation Metrics
-
-The baseline models were evaluated using:
-
-- MAE — Mean Absolute Error
-
-- RMSE — Root Mean Squared Error
-
-- MAPE — Mean Absolute Percentage Error
-
-## Generated Artifacts
-
-```text
-
-data/processed/baseline_predictions.csv
-
-reports/baseline_metrics.csv
-
-reports/figures/baseline_comparison.png
-
-```
-
----
-
-# Phase 5 — Machine Learning Models
-
-**Status: ✅ Completed**
-
-Machine-learning regression models were trained for national electricity demand forecasting using the engineered features developed in Phase 3.
-
-## ML Data Preparation
-
-The feature dataset was divided chronologically:
-
-```text
-
-80% → Training
-
-20% → Testing
-
-```
-
-A chronological split was used to preserve the time-series structure and prevent future observations from being randomly mixed into the training data.
-
-Script:
-
-```text
-
-src/models/prepare_ml_data.py
-
-```
-
-Generated:
-
-```text
-
-data/processed/ml_train.csv
-
-data/processed/ml_test.csv
-
-```
-
----
-
-## Machine Learning Models
-
-Three regression models were implemented.
-
-### Random Forest Regressor
-
-A tree-based ensemble model capable of capturing nonlinear relationships between demand, temporal features, lag features, rolling statistics, and weather variables.
-
-Script:
-
-```text
-
-src/models/train_random_forest.py
-
-```
-
-Generated model:
-
-```text
-
-models/random_forest.pkl
-
-```
-
-### Gradient Boosting Regressor
-
-A sequential boosting model that builds an ensemble of weak learners to improve prediction performance.
-
-Script:
-
-```text
-
-src/models/train_gradient_boosting.py
-
-```
-
-Generated model:
-
-```text
-
-models/gradient_boosting.pkl
-
-```
-
-### XGBoost Regressor
-
-A gradient-boosted tree model used as a strong nonlinear forecasting benchmark.
-
-Script:
-
-```text
-
-src/models/train_xgboost.py
-
-```
-
-Generated model:
-
-```text
-
-models/xgboost.pkl
-
-```
-
----
-
-## ML Features
-
-The models use:
-
-### Cyclical Features
-
-```text
-
-hour_sin
-
-hour_cos
-
-month_sin
-
-month_cos
-
-day_of_week_sin
-
-day_of_week_cos
-
-```
-
-### Lag Features
-
-```text
-
-demand_lag_1h
-
-demand_lag_24h
-
-demand_lag_168h
-
-```
-
-### Rolling Features
-
-```text
-
-demand_rolling_mean_24h
-
-demand_rolling_std_24h
-
-demand_rolling_mean_168h
-
-demand_rolling_std_168h
-
-```
-
-### Weather Features
-
-```text
-
-temperature_2m_c
-
-relative_humidity_pct
-
-cloud_cover_pct
-
-precipitation_mm
-
-wind_speed_10m_kmh
-
-solar_radiation_w_m2
-
-```
-
----
-
-## ML Evaluation
-
-The Phase 5 models were compared against the Phase 4 baseline models:
-
-```text
-
-Naive 24h
-
-Naive 168h
-
-Linear Regression
-
-Random Forest
-
-Gradient Boosting
-
-XGBoost
-
-```
-
-Evaluation metrics:
-
-- MAE
-
-- RMSE
-
-- MAPE
-
-Script:
-
-```text
-
-src/models/evaluate_ml_models.py
-
-```
-
-Generated:
-
-```text
-
-data/processed/ml_predictions.csv
-
-reports/ml_model_metrics.csv
-
-reports/figures/ml_model_comparison.png
-
-```
-
----
-
-## Phase 5 Validation
-
-Script:
-
-```text
-
-src/models/validate_models.py
-
-```
-
-Validation checks include:
-
-- Training dataset availability
-
-- Testing dataset availability
-
-- Model artifact availability
-
-- Prediction output availability
-
-- Evaluation metric availability
-
-- Required model coverage
-
-- Performance comparison output
-
-**Phase 5 completed successfully.**
-
----
-
-# Phase 6 — Advanced Time-Series Models
-
-Classical time-series models were added to complement the machine-learning forecasting models.
-
-Implemented models:
-
-- ARIMA
-
-- SARIMA
-
-ARIMA configuration:
-
-```text
-
-(2,1,2)
-
-SARIMA configuration:
-
-(1,1,1)(1,1,1,24)
-
-The SARIMA model uses a 24-hour seasonal period to capture daily hourly demand patterns.
-
-Generated artifacts:
-
-models/arima.pkl
-
-models/sarima.pkl
-
-data/processed/ts_train.csv
-
-data/processed/ts_test.csv
-
-data/processed/ts_predictions.csv
-
-reports/time_series_metrics.csv
-
-Validation status: PASSED
-
-ARIMA and SARIMA are evaluated alongside the Phase 4 baseline models and Phase 5 machine-learning models using MAE, RMSE, and MAPE.
-
----
-
-```
-
-# Phase 7 — Performance Comparison
-
-A unified performance comparison was created across all forecasting approaches implemented in Phases 4, 5, and 6.
-
-## Compared Models
-
-- Naive 24h
-
-- Naive 168h
-
-- Linear Regression
-
-- Random Forest
-
-- Gradient Boosting
-
-- XGBoost
-
-- ARIMA
-
-- SARIMA
-
-## Evaluation Metrics
-
-- MAE
-
-- RMSE
-
-- MAPE
-
-## Generated Artifacts
-
-```text
-
-reports/performance_comparison.csv
-
-reports/figures/performance_comparison.png
-
-```
-
----
-
-# Phase 8 — Best Model Selection
-
-The best forecasting model was selected using the consolidated performance results generated in Phase 7.
-
-### Selection Criteria
-
-- **RMSE** — primary criterion
-
-- **MAE** — secondary criterion
-
-- **MAPE** — secondary criterion
-
-Lower metric values indicate better forecasting performance.
-
-### Generated Artifacts
-
-```text
-
-reports/best_model.csv
-
-reports/figures/best_model_comparison.png
-
-```
-
----
-
-# Phase 9 — Explainability
-
-### Implemented SHAP-based explainability for the selected best forecasting model.
-
-Best model:
-
-- Linear Regression
-
-Method:
-
-- SHAP LinearExplainer
-
-### Generated outputs:
-
-- `reports/explainability_summary.csv`
-
-- `reports/figures/shap_summary.png`
-
-- `reports/figures/shap_bar.png`
-
-The analysis ranks the forecasting features according to their mean absolute SHAP contribution.
-
-Validation status: **PASSED**
-
----
-
-# Phase 10 — Renewable Energy Forecasting
-
-Implemented solar and wind renewable-energy forecasting components.
-
-### Solar
-
-- Indian solar generation data
-
-- Plant-level hourly aggregation
-
-- Linear Regression forecasting
-
-- Temporal and lag-based features
-
-Outputs:
-
-- `data/processed/solar_hourly.csv`
-
-- `data/processed/solar_train.csv`
-
-- `data/processed/solar_test.csv`
-
-- `reports/solar_metrics.csv`
-
-### Wind
-
-- NASA POWER hourly wind-speed data
-
-- Delhi location
-
-- Linear Regression wind-speed forecasting
-
-- Temporal and lag-based features
-
-Outputs:
-
-- `data/raw/renewable/nasa_power_wind_hourly.csv`
-
-- `data/processed/wind_train.csv`
-
-- `data/processed/wind_test.csv`
-
-- `reports/wind_metrics.csv`
-
-### Wind Power Potential
-
-Wind speed was converted into estimated wind-power potential using a representative normalized turbine power curve.
-
-Output:
-
-- `data/processed/wind_power_estimates.csv`
-
-This represents estimated wind-power potential and not measured turbine generation.
-
-### Renewable Evaluation
-
-Generated:
-
-- `reports/renewable_evaluation.csv`
-
-- `reports/figures/renewable_forecasting.png`
-
-Validation status: **PASSED**
-
-### Phase 10 Limitation
-
-The solar dataset covers approximately one month, while the wind dataset represents meteorological wind speed rather than measured turbine generation.
-
-Therefore, these outputs are not presented as a complete 2019–2024 historical renewable-generation forecast.
-
----
-
-# Phase 11 — Uncertainty / Confidence Analysis
-
-Implemented prediction uncertainty analysis for solar and wind forecasting.
-
-Method:
-
-- Residual-based prediction intervals
-
-- 95% confidence level
-
-- Test-set residual standard deviation
-
-- Prediction interval coverage analysis
-
-Outputs:
-
-- `data/processed/solar_uncertainty.csv`
-
-- `data/processed/wind_uncertainty.csv`
-
-- `reports/uncertainty_summary.csv`
-
-- `reports/figures/uncertainty_intervals.png`
-
-Each prediction contains a point estimate together with lower and upper prediction bounds.
-
-Validation status: **PASSED**
-
-The wind uncertainty analysis represents predicted wind-speed uncertainty and should not be interpreted as uncertainty in measured wind generation.
-
----
-
-# Phase 12 — Storage vs Backup Simulation
-
-Implemented a scenario-based battery storage simulation using solar renewable forecasts.
-
-Compared:
-
-- Backup-only operation
-
-- Renewable energy with battery storage
-
-- Remaining backup requirement after storage
-
-Battery configuration:
-
-- Capacity: 5000 kWh
-
-- Initial SOC: 2500 kWh
-
-- Charge efficiency: 90%
-
-- Discharge efficiency: 90%
-
-- Maximum charge/discharge rate: 1000 kW
-
-Outputs:
-
-- `data/processed/storage_backup_simulation.csv`
-
-- `reports/storage_backup_summary.csv`
-
-- `reports/figures/storage_backup_comparison.png`
-
-Validation status: **PASSED**
-
-### Phase 12 Limitation
-
-The simulation uses a scenario-based demand profile because the Phase 10 renewable datasets are not temporally synchronized with the complete historical demand dataset.
-
-Therefore, the results represent a scenario-based storage analysis rather than a complete historical India-wide storage simulation.
-
----
-
-# Phase 13 — Cost & CO₂ Impact Analysis
-
-Implemented cost and CO₂ impact analysis using the Phase 12 storage simulation.
-
-Calculated:
-
-- Backup electricity cost without storage
-
-- Backup electricity cost with storage
-
-- Cost savings
-
-- CO₂ emissions without storage
-
-- CO₂ emissions with storage
-
-- CO₂ reduction
-
-Scenario/reference assumptions:
-
-- Electricity cost: ₹6.52/kWh
-
-- Grid emission factor: 0.716 kg CO₂/kWh
-
-Outputs:
-
-- `data/processed/cost_co2_impact.csv`
-
-- `reports/cost_co2_summary.csv`
-
-- `reports/figures/cost_co2_impact.png`
-
-Validation status: **PASSED**
-
-### Phase 13 Limitation
-
-The results inherit the Phase 12 scenario-based assumptions and are not presented as a complete historical India-wide cost or emissions assessment.
-
----
-
-# Phase 14 — Dashboard & Final System
-
-Implemented the final interactive Streamlit dashboard integrating the complete project pipeline.
-
-Dashboard sections:
-
-- Overview
-
-- Forecasting
-
-- Renewable Energy
-
-- Uncertainty
-
-- Storage vs Backup
-
-- Cost & CO₂
-
-- Project Limitations
-
-Technology:
-
-- Python
-
-- Streamlit
-
-- Pandas
-
-The dashboard reads validated outputs generated by the previous project phases and does not retrain models.
-
-Main dashboard file:
-
-- `app/dashboard.py`
-
-Validation:
-
-- Dashboard files verified
-
-- Dashboard launched successfully
-
-- All sections displayed correctly
-
-Validation status: **PASSED**
-
-### Final Project Pipeline
-
-Data Acquisition
-
-↓
-
-Data Cleaning & Integration
-
-↓
-
-Exploratory Data Analysis
-
-↓
-
-Feature Engineering
-
-↓
-
-Baseline Forecasting
-
-↓
-
-Machine Learning Models
-
-↓
-
-Advanced Time-Series Models
-
-↓
-
-Performance Comparison
-
-↓
-
-Best Model Selection
-
-↓
-
-Explainability
-
-↓
-
-Renewable Energy Forecasting
-
-↓
-
-Uncertainty / Confidence Analysis
-
-↓
-
-Storage vs Backup Simulation
-
-↓
-
-Cost & CO₂ Impact
-
-↓
-
-Interactive Dashboard
-
----
-
-# Project Progress
-
-| Phase | Description                              | Status       |
-
-| ----: | ---------------------------------------- | ------------ |
-
-|     1 | Data Acquisition, Cleaning & Integration | ✅ Completed |
-
-|     2 | Exploratory Data Analysis                | ✅ Completed |
-
-|     3 | Feature Engineering                      | ✅ Completed |
-
-|     4 | Baseline Forecasting                     | ✅ Completed |
-
-|     5 | Machine Learning Models                  | ✅ Completed |
-
-|     6 | Advanced Time-Series Models              | ✅ Completed |
-
-|     7 | Performance Comparison                   | ✅ Completed |
-
-|     8 | Best Model Selection                     | ✅ Completed |
-
-|     9 | Explainability                           | ✅ Completed |
-
-|    10 | Renewable Energy Forecasting             | ✅ Completed |
-
-|    11 | Uncertainty / Confidence Analysis        | ✅ Completed |
-
-|    12 | Storage vs Backup Simulation             | ✅ Completed |
-
-|    13 | Cost & CO₂ Impact Analysis               | ✅ Completed |
-
-|    14 | Dashboard & Final System                 | ✅ Completed |
-
----
-
-\*\*# Final Project Status
-
-All 14 project phases have been completed and merged into the main branch.
-
-The project is now an end-to-end ML-based energy forecasting and decision-support workflow.
-
-Historical Electricity Demand + Weather
-↓
-Data Cleaning & Integration
-↓
-Exploratory Data Analysis
-↓
-Feature Engineering
-↓
-Demand Forecasting
-↓
-ML + Advanced Time-Series Models
-↓
-Model Comparison & Selection
-↓
-SHAP Explainability
-↓
-Solar + Wind Resource Forecasting
-↓
-Prediction Uncertainty
-↓
-Storage vs Backup Scenario
-↓
-Cost + CO₂ Analysis
-↓
-Interactive Streamlit Dashboard
-
-Important Interpretation
-
-The project demonstrates an end-to-end forecasting and energy-impact analysis workflow.
-
-The demand forecasting component learns from historical electricity-demand and weather observations and evaluates predictions on later unseen observations using chronological train-test splitting.
-
-The renewable-energy portion is partly scenario-based because the available solar and wind datasets are not fully synchronized with the complete electricity-demand dataset:
-
-Solar data covers approximately one month and represents measured solar generation.
-
-Wind data represents meteorological wind speed rather than measured turbine generation.
-
-Wind speed is converted into estimated wind-power potential using a representative turbine power curve.
-
-The storage simulation uses a deterministic scenario-based demand profile and solar forecast data.
-
-Cost and CO₂ calculations inherit these scenario assumptions.
-
-Therefore, the final system should be described as an ML-based energy forecasting and decision-support system, not as a complete real-time India-wide grid optimization system.
-
-Project Progress
-
-Phase
-
-Description
-
-Status
-
-1
-
-Data Acquisition, Cleaning & Integration
-
-✅ Completed
-
-2
-
-Exploratory Data Analysis
-
-✅ Completed
-
-3
-
-Feature Engineering
-
-✅ Completed
-
-4
-
-Baseline Forecasting
-
-✅ Completed
-
-5
-
-Machine Learning Models
-
-✅ Completed
-
-6
-
-Advanced Time-Series Models
-
-✅ Completed
-
-7
-
-Performance Comparison
-
-✅ Completed
-
-8
-
-Best Model Selection
-
-✅ Completed
-
-9
-
-Explainability
-
-✅ Completed
-
-10
-
-Renewable Energy Forecasting
-
-✅ Completed
-
-11
-
-Uncertainty / Confidence Analysis
-
-✅ Completed
-
-12
-
-Storage vs Backup Simulation
-
-✅ Completed
-
-13
-
-Cost & CO₂ Impact Analysis
-
-✅ Completed
-
-14
-
-Dashboard & Final System
-
-✅ Completed
-
-Final Outputs
-
-Demand Forecasting
-
-data/processed/demand_cleaned.csv
-data/processed/final_merged_dataset.csv
-data/processed/featured_dataset.csv
-data/processed/ml_train.csv
-data/processed/ml_test.csv
-data/processed/ml_predictions.csv
-data/processed/ts_train.csv
-data/processed/ts_test.csv
-data/processed/ts_predictions.csv
-
-Model Evaluation & Selection
-
-reports/baseline_metrics.csv
-reports/ml_model_metrics.csv
-reports/time_series_metrics.csv
-reports/performance_comparison.csv
-reports/best_model.csv
-
-Explainability
-
-reports/explainability_summary.csv
-reports/figures/shap_summary.png
-reports/figures/shap_bar.png
-
-Renewable Forecasting
-
-data/processed/solar_hourly.csv
-data/processed/solar_train.csv
-data/processed/solar_test.csv
-data/processed/wind_train.csv
-data/processed/wind_test.csv
-data/processed/wind_power_estimates.csv
-
-reports/solar_metrics.csv
-reports/wind_metrics.csv
-reports/renewable_evaluation.csv
-reports/figures/renewable_forecasting.png
-
-Uncertainty
-
-data/processed/solar_uncertainty.csv
-data/processed/wind_uncertainty.csv
-reports/uncertainty_summary.csv
-reports/figures/uncertainty_intervals.png
-
-Storage & Backup
-
-data/processed/storage_backup_simulation.csv
-reports/storage_backup_summary.csv
-reports/figures/storage_backup_comparison.png
-
-Cost & CO₂
-
-data/processed/cost_co2_impact.csv
-reports/cost_co2_summary.csv
-reports/figures/cost_co2_impact.png
-
-Final Dashboard
-
-app/dashboard.py
-app/validate_dashboard.py
-app/**init**.py
-
-Final System Architecture
-
-                     ┌─────────────────────┐
-                     │ Electricity Demand  │
-                     └──────────┬──────────┘
-                                │
-                     ┌──────────▼──────────┐
-                     │      Weather       │
-                     └──────────┬──────────┘
-                                │
-                                ▼
-                    Data Cleaning & Merging
-                                │
-                                ▼
-                       Feature Engineering
-                                │
-                                ▼
-                    Demand Forecasting Models
-                                │
-             ┌──────────────────┼──────────────────┐
-             │                  │                  │
-             ▼                  ▼                  ▼
-        Baselines          ML Models       Time-Series Models
-             │                  │                  │
-             └──────────────────┼──────────────────┘
-                                ▼
-                      Model Comparison
-                                │
-                                ▼
-                       Best Model Selection
-                                │
-                                ▼
-                         SHAP Explainability
-                                │
-              ┌─────────────────┴─────────────────┐
-              │                                   │
-              ▼                                   ▼
-       Solar Forecast                       Wind Forecast
-              │                                   │
-              └─────────────────┬─────────────────┘
-                                ▼
-                       Uncertainty Analysis
-                                │
-                                ▼
-                    Storage vs Backup Scenario
-                                │
-                                ▼
-                       Cost + CO₂ Analysis
-                                │
-                                ▼
-                    Interactive Dashboard
-
-Technologies\*\*
-
-- Python
-
-- Pandas
-
-- NumPy
-
-- Matplotlib
-
-- Scikit-learn
-
-- XGBoost
-
-- Joblib
-
-- Statsmodels
-
-- Time-Series Forecasting
-
-- Machine Learning
-
-- Explainable AI
-
-- Data Visualization
-
-Additional libraries will be introduced as required by later phases.
-
----
-
-\*\*# Project Structure
-
 ML-Based-Demand-Renewable-Energy-Forecasting/
-│
 ├── app/
-│ ├── **init**.py
-│ ├── dashboard.py
-│ └── validate_dashboard.py
-│
+│   └── dashboard.py                  # 4-tab Streamlit UI
 ├── data/
-│ ├── raw/
-│ │ └── renewable/
-│ │ └── nasa_power_wind_hourly.csv
-│ └── processed/
-│
-├── docs/
-│ ├── progress.md
-│ ├── decisions.md
-│ ├── Dataset_Research_Report.md
-│ ├── Full_Project_Execution_Plan.md
-│ └── PROJECT_CONTEXT.md
-│
+│   ├── raw/                          # acquired sources (demand xlsx, weather, renewable/)
+│   └── processed/
+│       ├── demand_cleaned.csv
+│       ├── solar_hourly.csv
+│       ├── aligned_hourly_dataset.csv      # authoritative merged hourly table
+│       ├── data_quality_summary.csv
+│       ├── forecast_features.csv           # leakage-safe training features
+│       ├── feature_manifest.json
+│       └── forecasts/
+│           ├── hourly_forecast.csv         # 8,760 h (12 months) lower/expected/upper
+│           ├── daily_forecast.csv
+│           ├── weekly_forecast.csv
+│           ├── monthly_forecast.csv
+│           └── future_features.csv         # features persisted for SHAP
 ├── models/
-│ ├── solar/
-│ └── wind/
-│
-├── notebooks/
-│
+│   └── realtime_forecasters.joblib         # selected model + feature list per target
 ├── reports/
-│ ├── figures/
-│ └── \*.csv
-│
+│   ├── realtime_model_metrics.csv          # MAE/RMSE/MAPE per candidate, selected flag
+│   ├── *_eda_records.csv, *_pattern_profile.csv, correlation_matrix.csv
+│   └── figures/
 ├── src/
-│ ├── data/
-│ ├── eda/
-│ ├── features/
-│ ├── baseline/
-│ ├── models/
-│ ├── renewable/
-│ ├── uncertainty/
-│ ├── storage/
-│ └── impact/
-│
+│   ├── data/        inspect_demand · clean_demand · fetch_weather ·
+│   │                download_pvgis_solar · clean_solar · build_aligned_dataset · live_weather
+│   ├── renewable/   download_wind_data
+│   ├── eda/         run_aligned_eda
+│   ├── features/    build_forecast_features
+│   ├── models/      train_realtime_models · realtime_forecast
+│   ├── forecasting/ operations
+│   └── explainability/ explain_dispatch
+├── docs/            project_audit · progress · decisions · complete_overview ·
+│                    Full_Project_Execution_Plan · Dataset_Research_Report
 ├── README.md
-├── requirements.txt
-└── .gitignore
-
-Development Approach\*\*
-
-The project is being implemented incrementally, one phase at a time.
-
-Each phase follows this workflow:
-
-1. Implementation
-
-2. Validation
-
-3. Documentation
-
-4. Git commit
-
-5. GitHub push
-
-6. Pull Request
-
-7. Merge into `main`
-
-This approach keeps the project reproducible, organized, and traceable throughout development.
-
----
-
-\*\*# How to Run the Final Dashboard
-
-Activate the project virtual environment and run:
-
-streamlit run app/dashboard.py
-
-The dashboard reads validated outputs generated by the completed project phases. It does not retrain models when the dashboard starts.
-
-To validate the dashboard files:
-
-python app/validate_dashboard.py
-
-Documentation\*\*
-
-Project progress:
-
-```text
-
-docs/progress.md
-
-```
-
-Technical decisions:
-
-```text
-
-docs/decisions.md
-
-```
-
-Dataset research:
-
-```text
-
-docs/Dataset_Research_Report.md
-
-```
-
-Full execution plan:
-
-```text
-
-docs/Full_Project_Execution_Plan.md
-
-```
-
-Project context:
-
-```text
-
-docs/PROJECT_CONTEXT.md
-
+└── requirements.txt
 ```
 
 ---
 
-# Model Artifacts
+## 4. File-by-file guide (purpose · tech stack · output)
 
-Trained machine-learning models are generated under:
+| File | Purpose | Tech stack | Output |
+|---|---|---|---|
+| `src/data/inspect_demand.py` | Inspect raw demand workbook (shape, types, range, nulls, duplicates) | pandas | console report |
+| `src/data/clean_demand.py` | Clean demand, parse datetimes, sort, add calendar columns | pandas | `data/processed/demand_cleaned.csv` |
+| `src/data/fetch_weather.py` | Download Delhi historical hourly weather | requests, Open-Meteo API | `data/raw/weather_hourly.csv` |
+| `src/data/download_pvgis_solar.py` | Download PVGIS 6 modelled 1 MWp Delhi solar potential | requests, PVGIS API | `data/raw/…solar…` |
+| `src/data/clean_solar.py` | Normalise solar to hourly `solar_generation_kw` | pandas | `data/processed/solar_hourly.csv` |
+| `src/renewable/download_wind_data.py` | Download NASA POWER `WS10M` hourly wind speed (Delhi) | requests, NASA POWER API | `data/raw/renewable/nasa_power_wind_hourly.csv` |
+| `src/data/build_aligned_dataset.py` | Inner-join all four sources on hourly timestamp; validate continuity/nulls/duplicates; convert wind speed → power via 1 MW turbine curve | pandas | `aligned_hourly_dataset.csv`, `data_quality_summary.csv` |
+| `src/eda/run_aligned_eda.py` | Hourly/daily/weekly/monthly demand & renewable patterns, correlations, figures | pandas, matplotlib | `reports/*_eda_records.csv`, `*_pattern_profile.csv`, `figures/` |
+| `src/features/build_forecast_features.py` | Cyclical calendar + lag (1/24/168 h) + rolling (24/168 h) features; `shift(1)` before rolling to prevent leakage | numpy, pandas | `forecast_features.csv`, `feature_manifest.json` |
+| `src/models/train_realtime_models.py` | Train Ridge / RandomForest / HistGradientBoosting per target (demand, solar, wind); auto-select best by test RMSE; persist pack | scikit-learn, joblib | `models/realtime_forecasters.joblib`, `reports/realtime_model_metrics.csv` |
+| `src/data/live_weather.py` | Fetch live Delhi weather (next 16 days) to anchor the real-time forecast; falls back to climatology on failure | requests, Open-Meteo API | in-memory DataFrame |
+| `src/models/realtime_forecast.py` | Recursive autoregressive multi-horizon forecast anchored at the current IST hour; live weather blended with month×hour normals; widening 95% intervals; aggregate to daily/weekly/monthly | numpy, pandas, joblib | `forecasts/hourly|daily|weekly|monthly_forecast.csv`, `future_features.csv` |
+| `src/forecasting/operations.py` | Scale national MW → facility kW; run the 3-level (lower/expected/upper) dispatch simulator; compute cost & CO₂ impact vs no-storage counterfactual | numpy, pandas | in-memory frames/dicts used by the dashboard |
+| `src/explainability/explain_dispatch.py` | SHAP explanations of the dispatch / CO₂ / cost calculations for a chosen timestamp | shap (LinearExplainer / TreeExplainer), joblib | explanation dicts rendered in the UI |
+| `app/dashboard.py` | 4-tab interactive dashboard (Hourly, Daily, Weekly, Monthly): ranged table, bounds chart, scenario dispatch simulator, point-wise explanation | streamlit, altair, pandas | web UI |
+
+---
+
+## 5. Datasets
+
+| Dataset | Source | Coverage | Role |
+|---|---|---|---|
+| Electricity demand | Kaggle — Hourly Load India | 2019-01-01 → 2024-04-30, hourly | Demand target (`national_demand_mw`) + regional columns |
+| Weather | Open-Meteo (Delhi 28.6139, 77.2090) | same window, hourly | Forecast features (temp, humidity, cloud, precipitation, radiation, wind speed) |
+| Wind resource | NASA POWER `WS10M` (Delhi) | same window, hourly | Converted to `wind_power_potential_kw` via 1 MW turbine curve |
+| Solar potential | PVGIS 6, 1 MWp Delhi | same window, hourly | `solar_generation_kw` (modelled potential, not metered output) |
+
+All four are inner-joined into **`aligned_hourly_dataset.csv` — 46,728 hourly rows × 23 columns**, with zero missing values and zero duplicate timestamps over the common window.
+
+---
+
+## 6. Models & selection
+
+Each target trains three candidates and keeps the one with the lowest validation RMSE (chronological split, 9,312 test rows):
+
+| Target | Selected model | RMSE | MAE | MAPE |
+|---|---|---:|---:|---:|
+| Demand (`national_demand_mw`) | **Ridge** | 3253.33 | 2490.50 | 1.36% |
+| Solar (`solar_generation_kw`) | **HistGradientBoosting** | 28.66 | 12.33 | 24.2% |
+| Wind (`wind_power_potential_kw`) | **RandomForest** | 0.186 | 0.0088 | 0.004% |
+
+Only scikit-learn estimators are used (Ridge, RandomForestRegressor, HistGradientBoostingRegressor). The selected model, its exact feature list, algorithm name and residual std are persisted together in `models/realtime_forecasters.joblib`.
+
+---
+
+## 7. Real-time forecasting (how "from now" works)
+
+- **Anchor:** `pd.Timestamp.now(tz="Asia/Kolkata").floor("h")` — the forecast starts at the current IST hour (the cached run is anchored `2026-09-22 07:00`).
+- **Weather:** live Open-Meteo Delhi forecast for the next 16 days; beyond that, month×hour climatological normals from the aligned history.
+- **Demand seed:** historical demand ends 2024-04-30, so the autoregressive buffers are seeded from the last 168 observed hours. *(Documented limitation: there is no live demand feed; demand patterns are learned, then projected.)*
+- **Recursion:** each predicted hour feeds its own lag/rolling features forward (lags 1/24/168 h, rolling 24/168 h).
+- **Intervals:** `margin = 1.96 × residual_std × sqrt(1 + 0.015 × (h−1))` → 95% bounds widen with horizon. Solar is forced to 0 when climatological radiation ≤ 0.
+- **Horizon:** 8,760 hours (12 months) cached once, then aggregated to daily (366), weekly (53) and monthly (13).
+
+> **Long-horizon note:** because demand is projected autoregressively for a full year from a 2024 seed, the monthly *expected* demand drifts downward over the 12-month horizon. The near-term (hourly/daily) forecast is the operationally meaningful range; treat far-month values as trend indicators, not precise levels.
+
+---
+
+## 8. Dispatch simulator, cost & CO₂
+
+`operations.py` scales national values to a facility/microgrid (defaults: demand ×0.05 → kW, solar ×5.0, wind ×1.0; battery 5,000 kWh / 1,000 kW; round-trip efficiency 0.9). For each hour and each bound level:
 
 ```text
-
-models/
-
+renewable = solar + wind
+used      = min(renewable, demand)
+surplus   = renewable − used            → charges battery (≤ power, ≤ free capacity)
+deficit   = demand − used               → battery discharges (≤ power, ≤ available energy)
+backup    = max(0, deficit − discharge) → grid / diesel backup
+curtailed = max(0, surplus − charge)
 ```
 
-The `.pkl` model artifacts are generated outputs and are excluded from normal Git tracking because some trained models exceed GitHub's standard file-size limit.
+**Impact** compares a no-storage counterfactual (renewable direct use only) against with-storage:
 
-They can be regenerated using the corresponding training scripts under:
+- `cost_savings = (backup_without_storage − backup_with_storage) × tariff` (default ₹6.52/kWh)
+- `co2_avoided  = (backup_without_storage − backup_with_storage) × emission_factor` (default 0.710 kg CO₂/kWh)
+
+Energy conservation is enforced exactly (verified 0.0 kW residual) and SOC stays within `[0, capacity]`.
+
+---
+
+## 9. SHAP explainability (of the calculations)
+
+`explain_dispatch.py` explains **why the dispatch / CO₂ / cost numbers came out as they did** for a selected timestamp — *not* why a model was chosen. It loads the persisted model pack and `future_features.csv`, uses `LinearExplainer` for Ridge (500-row background) and `TreeExplainer` for the tree models, and returns the top drivers plus a point-wise narrative:
 
 ```text
-
-src/models/
-
+Demand:           …
+Renewable supply: …
+Renewable used:   …
+Storage:          …
+Backup:           …
+Curtailed:        …
+Dispatch order:   renewable → battery → grid
+CO₂ avoided:      …
+Cost saved:       …
 ```
 
 ---
 
-# License
+## 10. Dashboard — exactly 4 tabs
 
-This project is developed for academic and research purposes.
+| Tab | Window | Table | Chart | Simulator | Explanation |
+|---|---|---|---|---|---|
+| **Hourly** | next 24 h | demand / renewable supply / storage / backup, in ranges | one bounds chart (upper+lower, colour-coded) | pick an hour → dispatch scenario | point-wise SHAP block |
+| **Daily** | next 7 days | same, daily ranges | same | pick a day | same |
+| **Weekly** | next 4 weeks | same, weekly ranges | same | pick a week | same |
+| **Monthly** | next 12 months | same, monthly ranges | same | pick a month | same |
+
+Bound colours: demand `#e4572e`, renewable `#2ca02c`, backup `#1f77b4`. Sidebar sliders control demand/solar/wind scale, battery capacity/SOC/power, tariff and emission factor.
+
+---
+
+## 11. How to run
+
+All commands run from the project root. The project uses the local virtual environment `.venv` (shap/streamlit are installed there, not in the global Python).
+
+**Windows (Git Bash):**
+
+```bash
+# 0) one-time: create + install the environment
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -r requirements.txt
+
+# 1) build the aligned dataset (after the raw sources are present)
+.venv/Scripts/python.exe src/data/build_aligned_dataset.py
+
+# 2) EDA + features
+.venv/Scripts/python.exe src/eda/run_aligned_eda.py
+.venv/Scripts/python.exe src/features/build_forecast_features.py
+
+# 3) train + auto-select best model per target
+.venv/Scripts/python.exe src/models/train_realtime_models.py
+
+# 4) generate the real-time 12-month forecast cache (anchored at NOW; ~10 min)
+.venv/Scripts/python.exe src/models/realtime_forecast.py
+
+# 5) launch the dashboard
+.venv/Scripts/streamlit.exe run app/dashboard.py
+```
+
+Then open the URL printed in the terminal (normally `http://localhost:8501`).
+
+**PowerShell / CMD** equivalents use `.venv\Scripts\python.exe` and `.venv\Scripts\streamlit.exe`.
+
+> Steps 1–4 are batch preparation. If `data/processed/forecasts/*.csv` and `models/realtime_forecasters.joblib` already exist, you can skip straight to step 5 — the dashboard reads the cache and does not retrain.
+
+---
+
+## 12. Key assumptions & limitations (read before review)
+
+- **Delhi weather** is a representative hourly signal for an India-wide demand series; it does not claim to represent all of India.
+- **Solar** is PVGIS-modelled potential for a 1 MWp Delhi system, not metered plant output.
+- **Wind** is NASA POWER wind *speed* converted to power through a representative 1 MW turbine curve (cut-in 3, rated 12, cut-out 25 m/s), not measured generation.
+- **Demand has no live feed** — history ends 2024-04-30; the real-time forecast projects learned patterns forward from the last observed state.
+- **Facility scaling** (demand ×0.05, solar ×5.0, wind ×1.0) maps national values to a microgrid-sized scenario; adjust via the sidebar.
+- **Tariff ₹6.52/kWh and emission factor 0.710 kg CO₂/kWh** are configurable scenario/reference values, not universal constants.
+- **Long-horizon demand drift** — see §7.
+
+---
+
+## 13. Tech stack
+
+Python 3.13 · pandas · numpy · scikit-learn (Ridge, RandomForest, HistGradientBoosting) · joblib · SHAP · Streamlit · Altair · matplotlib · requests (Open-Meteo, NASA POWER, PVGIS).
+
+---
+
+## 14. Documentation
+
+- `docs/project_audit.md` — the REUSE → EXTEND → REFACTOR blueprint that drove this redesign.
+- `docs/progress.md` — phase status against the new goal.
+- `docs/decisions.md` — technical decisions and rationale.
+- `docs/complete_overview.md` — end-to-end narrative.
+- `docs/Full_Project_Execution_Plan.md` — execution plan.
+- `docs/Dataset_Research_Report.md` — dataset sourcing research.
+
+---
+
+## 15. License
+
+Developed for academic and research purposes.
