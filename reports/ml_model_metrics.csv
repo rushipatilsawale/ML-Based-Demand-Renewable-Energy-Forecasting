@@ -1,0 +1,10 @@
+target,model,mae,rmse,mape_pct,residual_std,test_rows,deployable
+demand,random_forest,2798.7643,4212.1739,1.4614,4074.643,9312,1
+demand,gradient_boosting,2582.6661,4260.0669,1.3266,4009.6567,9312,1
+demand,xgboost,2698.7811,4355.4287,1.3872,4043.9993,9312,1
+solar,random_forest,11.7494,28.9005,10.4693,28.8961,9312,1
+solar,gradient_boosting,12.3782,28.585,25.7621,28.5776,9312,1
+solar,xgboost,11.8709,28.3897,22.3227,28.3837,9312,1
+wind,random_forest,0.0088,0.1774,0.0039,0.1774,9312,1
+wind,gradient_boosting,0.5013,6.5144,1.579,6.5139,9312,1
+wind,xgboost,0.4322,6.4365,1.1087,6.4364,9312,1

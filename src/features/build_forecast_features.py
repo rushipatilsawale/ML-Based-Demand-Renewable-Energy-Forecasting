@@ -1,10 +1,20 @@
 """Create validated leakage-safe features for demand and renewable forecasting."""
 from pathlib import Path
 import json
+import sys
 import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.features.calendar_features import (  # noqa: E402
+    LABEL_COLUMNS,
+    NUMERIC_CALENDAR_FEATURES,
+    add_calendar_features,
+)
+
 INPUT = ROOT / "data" / "processed" / "aligned_hourly_dataset.csv"
 OUTPUT = ROOT / "data" / "processed" / "forecast_features.csv"
 MANIFEST = ROOT / "data" / "processed" / "feature_manifest.json"
@@ -23,6 +33,11 @@ def build_features():
         df[f"{column}_sin"] = np.sin(2 * np.pi * df[column] / period)
         df[f"{column}_cos"] = np.cos(2 * np.pi * df[column] / period)
     df["is_night"] = ((df.hour < 6) | (df.hour >= 18)).astype("int8")
+    # Season (IMD 4-season) and Indian-festival flags come from the shared calendar
+    # module so the real-time engine encodes future rows identically. Numeric
+    # one-hot/binary columns become model features; season/festival_name stay as
+    # human-readable labels for the dashboard and SHAP narrative.
+    add_calendar_features(df)
     # Every historical target is shifted before lag/rolling calculation.
     for target in TARGETS:
         shifted = df[target].shift(1)
@@ -46,6 +61,7 @@ def build_features():
     manifest = {"input": str(INPUT.name), "output": str(OUTPUT.name), "rows": len(features),
                 "start": str(features.datetime.min()), "end": str(features.datetime.max()),
                 "target_columns": TARGETS, "weather_features": weather_features,
+                "calendar_features": NUMERIC_CALENDAR_FEATURES, "label_columns": LABEL_COLUMNS,
                 "lags_hours": LAGS, "rolling_windows_hours": WINDOWS,
                 "leakage_control": "All rolling values use target.shift(1); lag values use prior timestamps only."}
     MANIFEST.write_text(json.dumps(manifest, indent=2), encoding="utf-8")

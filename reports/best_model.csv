@@ -1,0 +1,4 @@
+target,selected_model,category,rmse,mae,mape_pct,residual_std,n_features
+demand,linear_regression,baseline,3237.1263,2485.3355,1.3561,3235.752,27
+solar,xgboost,ml,28.3897,11.8709,22.3227,28.3837,27
+wind,xgboost,ml,6.4365,0.4322,1.1087,6.4364,27

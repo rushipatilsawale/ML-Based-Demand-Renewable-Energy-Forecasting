@@ -1,0 +1,5 @@
+season,national_demand_mw,solar_generation_kw,wind_power_potential_kw,combined_renewable_kw,temperature_2m_c,relative_humidity_pct,cloud_cover_pct,precipitation_mm
+Winter,155516.946,195.446,15.174,210.62,14.33,73.631,26.712,0.034
+Summer,163086.5,218.467,31.43,249.897,27.168,43.597,26.569,0.036
+Monsoon,167830.872,162.27,34.102,196.371,30.227,69.832,48.852,0.179
+Post-monsoon,149686.095,197.39,7.362,204.752,22.674,62.18,16.045,0.029

@@ -23,21 +23,22 @@ Status of the redesigned, real-time forecasting system. The legacy 14-phase line
 
 | Target | Model | RMSE | MAE | MAPE |
 |---|---|---:|---:|---:|
-| Demand | Ridge | 3253.33 | 2490.50 | 1.36% |
-| Solar | HistGradientBoosting | 28.66 | 12.33 | 24.2% |
-| Wind | RandomForest | 0.186 | 0.0088 | 0.004% |
+| Demand | LinearRegression | 3237.13 | 2485.34 | 1.36% |
+| Solar | XGBoost | 28.39 | 11.87 | 22.3% |
+| Wind | XGBoost | 6.44 | 0.43 | 1.11% |
 
 ## Verified behaviour
 
 - Aligned dataset: 46,728 continuous hourly rows, 0 nulls, 0 duplicate timestamps.
 - Dispatch energy conservation residual: 0.0 kW; SOC bounded within `[0, capacity]`.
-- Real-time anchor: forecast starts at the current IST hour (cached run anchored 2026-09-22 07:00).
+- Real-time anchor: forecast starts at the current IST hour (cached run anchored to live time in IST).
 - Live weather feed verified reachable (Open-Meteo, status 200).
-- Dashboard renders all four tabs with ranged table, bounds chart, scenario simulator and SHAP explanation.
+- Dashboard renders all four tabs with ranged table, bounds chart, scenario simulator, 7 metric summary cards, animated powerhouse topology, and SHAP explanation.
 
-## Removed in the redesign
+## Modular pipeline structure
 
-`src/baseline/`, `src/time_series/`, `src/comparison/`, `src/selection/`, `src/uncertainty/`, `src/storage/`, `src/impact/`, the per-algorithm training scripts (`train_random_forest`, `train_gradient_boosting`, `train_xgboost`, ARIMA/SARIMA), the old `explain_model`/`validate_explainability`, `merge_data`/`validate_merged`, the split EDA scripts, `estimate_wind_power`/`validate_wind_power`, `app/validate_dashboard.py`, and empty scaffolding dirs (`backend/`, `frontend/`, `notebooks/`, `tests/`, `src/simulation/`, `src/utils/`).
+Active stages: `src/data/`, `src/eda/`, `src/features/`, `src/baseline/`, `src/models/`, `src/comparison/`, `src/selection/`, `src/forecasting/`, `src/explainability/`.
+Legacy unintegrated scripts (standalone ARIMA/SARIMA, old single-target explainers, static storage scripts) have been clean-merged into this modular flow.
 
 ## Known limitations
 

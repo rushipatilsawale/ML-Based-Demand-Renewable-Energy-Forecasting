@@ -18,6 +18,27 @@ def save_plot(frame, columns, title, ylabel, name):
     ax.grid(alpha=.25); plt.tight_layout(); plt.savefig(FIGURES / name, dpi=160); plt.close()
 
 
+def save_dual_axis_plot(frame, left_columns, right_columns, title, left_label, right_label, name):
+    """Plot MW-scale demand and kW-scale renewable on separate axes.
+
+    Demand (~1.5e5 MW) and renewable (~1e2 kW) differ by ~1000x; on a shared
+    axis the renewable series is crushed against zero. Twin axes keep both
+    readable so the renewable pattern is actually visible.
+    """
+    fig, left_ax = plt.subplots(figsize=(12, 5))
+    left_ax.plot(frame.index, frame[left_columns], linewidth=1.8, color="#e4572e")
+    left_ax.set_ylabel(left_label, color="#e4572e")
+    left_ax.tick_params(axis="y", labelcolor="#e4572e")
+    left_ax.grid(alpha=.25)
+    right_ax = left_ax.twinx()
+    right_ax.plot(frame.index, frame[right_columns], linewidth=1.8)
+    right_ax.set_ylabel(right_label)
+    lines = left_ax.get_lines() + right_ax.get_lines()
+    left_ax.legend(lines, [ln.get_label() for ln in lines], loc="upper left", fontsize=8)
+    left_ax.set_title(title)
+    fig.tight_layout(); plt.savefig(FIGURES / name, dpi=160); plt.close(fig)
+
+
 def run_eda():
     REPORTS.mkdir(exist_ok=True); FIGURES.mkdir(exist_ok=True)
     df = pd.read_csv(INPUT, parse_dates=["datetime"]).sort_values("datetime")
@@ -47,11 +68,11 @@ def run_eda():
     pd.DataFrame({"metric": ["rows", "missing_values", "duplicate_timestamps", "start", "end", "facility_scale_kw_per_mw", "mean_national_demand_mw", "mean_combined_renewable_kw", "mean_energy_balance_kw"],
                   "value": [len(df), int(df.isna().sum().sum()), int(df.datetime.duplicated().sum()), df.datetime.min(), df.datetime.max(), FACILITY_SCALE_KW_PER_MW, df.national_demand_mw.mean(), df.combined_renewable_kw.mean(), df.energy_balance_kw.mean()]}).to_csv(REPORTS / "eda_summary.csv", index=False)
 
-    save_plot(hourly_profile, list(hourly_profile.columns), "Average hourly demand and renewable generation", "MW / kW", "hourly_demand_renewable_profile.png")
-    save_plot(weekday_profile, list(weekday_profile.columns), "Average weekday demand and combined renewable supply", "MW / kW", "weekday_demand_renewable_profile.png")
-    save_plot(monthly_profile, list(monthly_profile.columns), "Monthly demand, renewable supply and facility energy balance", "Mixed units", "monthly_energy_patterns.png")
+    save_dual_axis_plot(hourly_profile, ["national_demand_mw"], ["solar_generation_kw", "wind_power_potential_kw", "combined_renewable_kw"], "Average hourly demand and renewable generation", "Demand (MW)", "Renewable (kW)", "hourly_demand_renewable_profile.png")
+    save_dual_axis_plot(weekday_profile, ["national_demand_mw"], ["combined_renewable_kw"], "Average weekday demand and combined renewable supply", "Demand (MW)", "Renewable (kW)", "weekday_demand_renewable_profile.png")
+    save_dual_axis_plot(monthly_profile, ["national_demand_mw"], ["combined_renewable_kw", "energy_balance_kw"], "Monthly demand, renewable supply and facility energy balance", "Demand (MW)", "Renewable / balance (kW)", "monthly_energy_patterns.png")
     save_plot(daily, ["national_demand_mw"], "Daily mean national demand", "MW", "daily_demand.png")
-    save_plot(weekly, ["national_demand_mw", "combined_renewable_kw"], "Weekly mean demand and renewable supply", "MW / kW", "weekly_demand_renewable.png")
+    save_dual_axis_plot(weekly, ["national_demand_mw"], ["combined_renewable_kw"], "Weekly mean demand and renewable supply", "Demand (MW)", "Renewable (kW)", "weekly_demand_renewable.png")
     fig, ax = plt.subplots(figsize=(11, 9)); image = ax.imshow(corr, cmap="coolwarm", vmin=-1, vmax=1)
     ax.set_xticks(range(len(variables)), variables, rotation=75, ha="right"); ax.set_yticks(range(len(variables)), variables)
     fig.colorbar(image, ax=ax, label="Pearson correlation"); ax.set_title("Demand, weather, solar and wind correlation matrix")

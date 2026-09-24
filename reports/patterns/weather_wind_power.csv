@@ -1,0 +1,7 @@
+wind_band,wind_power_potential_kw,wind_speed_10m_ms,observations
+<3 (cut-in),0.167,1.976,28902
+3-6,27.938,3.924,16128
+6-9,371.189,6.919,1624
+9-12,1000.0,9.828,74
+12-25 (rated),,,0
+>25 (cut-out),,,0

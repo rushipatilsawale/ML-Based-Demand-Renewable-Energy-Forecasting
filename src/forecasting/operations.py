@@ -18,9 +18,12 @@ CACHE_DIR = ROOT / "data" / "processed" / "forecasts"
 
 LEVELS = ("lower", "expected", "upper")
 # Facility-scale factors (audit "Microgrid Scale Mode"); user-adjustable sliders.
+# Solar is sized so a clear midday genuinely over-produces vs facility demand and
+# the surplus auto-fills the battery (the storage story only exists if renewable
+# can exceed demand). Demand x0.05 -> ~8 MW facility; solar x14 -> ~9 MWp array.
 DEFAULT_DEMAND_SCALE = 0.05   # national MW -> facility kW
-DEFAULT_SOLAR_SCALE = 5.0     # plant kW -> facility solar kW
-DEFAULT_WIND_SCALE = 1.0
+DEFAULT_SOLAR_SCALE = 14.0    # plant kW -> facility solar kW
+DEFAULT_WIND_SCALE = 200.0    # plant kW -> facility wind kW (sized for ~3 MW wind array)
 ETA = 0.9                     # round-trip charge/discharge efficiency
 
 
@@ -48,7 +51,13 @@ def load_cached_hourly():
 
 def cached_facility_frame(demand_scale=DEFAULT_DEMAND_SCALE, solar_scale=DEFAULT_SOLAR_SCALE,
                           wind_scale=DEFAULT_WIND_SCALE):
-    return to_facility(load_cached_hourly(), demand_scale, solar_scale, wind_scale)
+    df = load_cached_hourly()
+    now = pd.Timestamp.now(tz="Asia/Kolkata").tz_localize(None).floor("h")
+    start_time = now - pd.Timedelta(hours=6)
+    if start_time in df["datetime"].values:
+        idx = df[df["datetime"] == start_time].index[0]
+        df = df.iloc[idx:].reset_index(drop=True)
+    return to_facility(df, demand_scale, solar_scale, wind_scale)
 
 
 def forecast_frame(hours=24, start=None, live=True,
@@ -83,10 +92,16 @@ def _dispatch_level(frame, level, capacity_kwh, initial_soc_pct, power_kw):
         backup[i] = max(0.0, deficit - dis)
         curtailed[i] = max(0.0, surplus - c)
         soc_trace[i] = soc
+    # Renewable storage: `charge` is exactly the renewable surplus parked in the
+    # battery each hour (auto-filled, never manual). Cumulative tracks the running
+    # total stored so hourly/daily/weekly/monthly records can report it directly.
+    stored_cum = np.cumsum(charge)
     return pd.DataFrame({
         f"renewable_used_{level}_kw": used, f"battery_charge_{level}_kw": charge,
         f"battery_discharge_{level}_kw": discharge, f"backup_{level}_kw": backup,
-        f"curtailed_{level}_kw": curtailed, f"soc_{level}_kwh": soc_trace})
+        f"curtailed_{level}_kw": curtailed, f"soc_{level}_kwh": soc_trace,
+        f"renewable_stored_{level}_kw": charge,
+        f"renewable_stored_cum_{level}_kwh": stored_cum})
 
 
 def dispatch_scenario(frame, capacity_kwh=5000, initial_soc_pct=50, power_kw=1000):

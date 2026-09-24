@@ -25,9 +25,9 @@ Rationale behind the redesigned real-time forecasting system.
 
 | Decision | Reason |
 |---|---|
-| Three candidates per target (Ridge, RandomForest, HistGradientBoosting) | Lets the data pick the model rather than assuming one algorithm fits all targets. |
+| Multiple candidates per target (LinearRegression, Ridge, RandomForest, HistGradientBoosting, XGBoost) | Lets the data pick the model per target based on validation RMSE. |
 | Auto-select by validation RMSE on a chronological split | RMSE penalises large errors; chronological split simulates real past→future deployment. |
-| scikit-learn only | No xgboost / statsmodels / lightgbm in the environment; sklearn covers the required estimators. |
+| Feature isolation via `sklearn.base.clone(model)` | Prevents XGBoost feature name collisions across multiple targets. |
 | Persist model + feature list + algorithm + residual std in one joblib pack | The forecaster and SHAP explainer must use the exact training features and residual scale. |
 
 ## Real-time forecasting
@@ -45,7 +45,7 @@ Rationale behind the redesigned real-time forecasting system.
 
 | Decision | Reason |
 |---|---|
-| Facility scaling (demand ×0.05, solar ×5.0, wind ×1.0) | Maps national MW to a microgrid-sized scenario the battery can actually serve. |
+| Facility scaling (demand ×0.05, solar ×14.0, wind ×200.0) | Maps national MW to a microgrid-sized scenario the battery can actually serve. |
 | Dispatch order renewable → battery → grid | Reflects real merit-order: use free renewable first, then storage, then paid backup. |
 | Simulate all three bound levels | Lower/expected/upper dispatch gives a risk range, not a single number. |
 | No-storage counterfactual for impact | Isolates the benefit attributable to storage: avoided backup × tariff and × emission factor. |

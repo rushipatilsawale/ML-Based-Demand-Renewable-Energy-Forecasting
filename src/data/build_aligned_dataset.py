@@ -56,10 +56,13 @@ def build_aligned_dataset():
     return merged
 
 
-def wind_power_curve(speed):
-    """1 MW reference turbine: 3 m/s cut-in, 12 m/s rated, 25 m/s cut-out."""
-    s = pd.Series(speed, dtype=float)
-    return pd.Series(0.0, index=s.index).mask((s >= 3) & (s < 12), 1000 * ((s - 3) / 9) ** 3).mask((s >= 12) & (s < 25), 1000.0)
+def wind_power_curve(speed_10m):
+    """1 MW reference turbine at 80m hub height (Hellmann power law alpha=0.143).
+    Cut-in: 3 m/s, rated: 12 m/s, cut-out: 25 m/s.
+    """
+    speed_80m = pd.Series(speed_10m, dtype=float) * (8.0 ** 0.143)
+    s = speed_80m
+    return pd.Series(0.0, index=s.index).mask((s >= 3.0) & (s < 12.0), 1000.0 * ((s - 3.0) / 9.0) ** 3).mask((s >= 12.0) & (s < 25.0), 1000.0)
 
 
 if __name__ == "__main__":
