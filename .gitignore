@@ -35,7 +35,8 @@ dist/
 
 # Project datasets
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/forecasts/
 
 # Trained ML model artifacts
 models/**/*.pkl

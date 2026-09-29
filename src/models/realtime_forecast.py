@@ -199,9 +199,14 @@ def forecast_hourly(hours=HOURS_12M, start=None, pack=None, hist=None, live=True
 
             margin = Z * mdata["residual_std"] * margin_factor
             unit = mdata["unit"]
-            row[f"{name}_{unit}_expected"] = pred
-            row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
-            row[f"{name}_{unit}_upper"] = pred + margin
+            if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
+                row[f"{name}_{unit}_expected"] = 0.0
+                row[f"{name}_{unit}_lower"] = 0.0
+                row[f"{name}_{unit}_upper"] = 0.0
+            else:
+                row[f"{name}_{unit}_expected"] = pred
+                row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
+                row[f"{name}_{unit}_upper"] = pred + margin
 
         records.append({"datetime": ts, **{c: row[c] for c in VALUE_COLS}})
         if return_features:

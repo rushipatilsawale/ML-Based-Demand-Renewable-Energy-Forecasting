@@ -193,7 +193,10 @@ st.sidebar.header("⚡ Reference Assumptions")
 anchor = load_cached_hourly().datetime.iloc[0]
 st.sidebar.caption(f"Forecast anchored at **{anchor}** IST (live weather + learned "
                    "season/festival patterns).")
+st.sidebar.caption("ℹ️ *Note on horizons:* Autoregressive demand projections reflect seasonal trend indicators over long horizons. Near-term Hourly (24h) and Daily (7d) tabs provide exact operational dispatch.")
+
 with st.sidebar.expander("Facility sizing & battery", expanded=False):
+    st.info("🏭 **Microgrid Facility Scaling**: National demand (~180,000 MW peak) is scaled by 0.05 to simulate an ~8 MW microgrid load. Plant solar (×14.0) and wind (×200.0) are scaled to match facility generation (~9 MWp solar, ~3 MW wind) so surplus renewable energy auto-fills the battery.")
     demand_scale = st.slider("Demand scale (kW per national MW)", 0.01, 0.15, DEFAULT_DEMAND_SCALE, 0.01)
     approx_load_kw = demand_scale * 180000
     st.caption(f"💡 Approx Facility Peak Load: **{approx_load_kw:,.0f} kW** ({approx_load_kw/1000:,.1f} MW)")
@@ -236,26 +239,26 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
 
         st.markdown("---")
         st.subheader("📋 Forecast Data Table (Expected values with Lower–Upper prediction bounds)")
-        st.dataframe(table(view), hide_index=True, use_container_width=True)
+        st.dataframe(table(view), hide_index=True, width="stretch")
 
         st.markdown("---")
         st.subheader("📊 3 Core Interactive Visualizations")
 
         st.markdown("#### 1️⃣ Real-Time Bounds & Energy Balance (Demand vs Renewable vs Backup)")
-        st.altair_chart(bounds_chart(view), use_container_width=True)
+        st.altair_chart(bounds_chart(view), width="stretch")
 
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("#### 2️⃣ Generation & Load Breakdown (Demand vs Solar vs Wind)")
             bc = demand_breakdown_chart(view, time_col="period", height=320)
             if bc is not None:
-                st.altair_chart(bc, use_container_width=True)
+                st.altair_chart(bc, width="stretch")
         with c2:
             st.markdown("#### 3️⃣ Combined Weather Context Attributes")
             wx = aggregate_weather(cfg["block"], cfg["n"])
             wc = weather_chart(wx.rename(columns={"period": "datetime"}), height=320)
             if wc is not None:
-                st.altair_chart(wc, use_container_width=True)
+                st.altair_chart(wc, width="stretch")
             else:
                 st.info("Weather context unavailable.")
 
@@ -376,13 +379,13 @@ for (slab, scfg), stab in zip(SCEN_TABS.items(), st.tabs(list(SCEN_TABS.keys()))
             st.subheader("1️⃣ Scenario Demand & Renewable Generation Breakdown")
             sbc = demand_breakdown_chart(sview, time_col="period", height=320)
             if sbc is not None:
-                st.altair_chart(sbc, use_container_width=True)
+                st.altair_chart(sbc, width="stretch")
         with c2:
             st.subheader("2️⃣ Scenario Weather Attributes")
-            swx = aggregate_weather(scfg["block"], scfg["n"])
-            wc = weather_chart(sdisp if scfg["block"] == 1 else swx.rename(columns={"period": "datetime"}), height=320)
+            swx = sdisp if scfg["block"] == 1 else sview.rename(columns={"period": "datetime"})
+            wc = weather_chart(swx, height=320)
             if wc is not None:
-                st.altair_chart(wc, use_container_width=True)
+                st.altair_chart(wc, width="stretch")
 
         st.subheader("🏭 What-If Powerhouse Dispatch")
         speriods = pd.to_datetime(sview["period"]).dt.strftime(scfg["fmt"]).tolist()

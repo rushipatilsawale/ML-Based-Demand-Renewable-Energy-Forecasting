@@ -164,14 +164,19 @@ def build_scenario_frame(season="Summer", festival="No festival", weather="Sunny
                 row[f"{stem}_rolling_std_{w}h"] = std
             feats = info["features"]
             pred = float(info["model"].predict(np.array([[row[f] for f in feats]], float))[0])
-            if name == "solar" and row["solar_radiation_w_m2"] <= 0:
+            if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
                 pred = 0.0
             pred = max(0.0, pred)
             margin = Z * info["residual_std"]
             unit = "mw" if name == "demand" else "kw"
-            row[f"{name}_{unit}_expected"] = pred
-            row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
-            row[f"{name}_{unit}_upper"] = pred + margin
+            if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
+                row[f"{name}_{unit}_expected"] = 0.0
+                row[f"{name}_{unit}_lower"] = 0.0
+                row[f"{name}_{unit}_upper"] = 0.0
+            else:
+                row[f"{name}_{unit}_expected"] = pred
+                row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
+                row[f"{name}_{unit}_upper"] = pred + margin
         value_cols = [c for c in row if c.endswith(("_lower", "_expected", "_upper"))]
         records.append({"datetime": ts, **{c: row[c] for c in value_cols},
                         "season": row.get("season"), "festival_name": row.get("festival_name"),
