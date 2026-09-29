@@ -33,10 +33,38 @@ st.set_page_config(page_title="India Energy Decision Support", page_icon="⚡", 
 
 FUTURE_FEATURES = ROOT / "data" / "processed" / "forecasts" / "future_features.csv"
 TABS = {
-    "Hourly · next 24 h": {"block": 1, "n": 24, "picker_label": "Select Hour of Day"},
-    "Daily · next 7 days": {"block": 24, "n": 7, "picker_label": "Select Day of Week"},
-    "Weekly · next 4 weeks": {"block": 168, "n": 4, "picker_label": "Select Week of Month"},
-    "Monthly · next 12 months": {"block": 730, "n": 12, "picker_label": "Select Month of Year"},
+    "Hourly · next 24 h": {
+        "block": 1, "n": 24,
+        "picker_label": "Select Hour of Day",
+        "fmt": "%Y-%m-%d %H:%M",
+        "period_col": "Hour (IST)",
+        "unit_desc": "Hourly expected values",
+        "start_from_midnight": False,
+    },
+    "Daily · next 7 days": {
+        "block": 24, "n": 7,
+        "picker_label": "Select Day of Week",
+        "fmt": "%Y-%m-%d (%A)",
+        "period_col": "Date",
+        "unit_desc": "Daily 24h average values",
+        "start_from_midnight": True,
+    },
+    "Weekly · next 4 weeks": {
+        "block": 168, "n": 4,
+        "picker_label": "Select Week of Month",
+        "fmt": "Week of %Y-%m-%d",
+        "period_col": "Week",
+        "unit_desc": "Weekly average values",
+        "start_from_midnight": True,
+    },
+    "Monthly · next 12 months": {
+        "block": 730, "n": 12,
+        "picker_label": "Select Month of Year",
+        "fmt": "%B %Y",
+        "period_col": "Month",
+        "unit_desc": "Monthly average values",
+        "start_from_midnight": True,
+    },
 }
 COLORS = {"Demand": "#e4572e", "Renewable supply": "#2ca02c", "Backup needed": "#1f77b4"}
 
@@ -60,9 +88,10 @@ def load_weather():
 
 @st.cache_data(show_spinner=False)
 def build_scenario(season, festival, weather, weekend, demand_scale, solar_scale,
-                   wind_scale, capacity, soc0, power):
+                   wind_scale, capacity, soc0, power, sel_month=None, sel_day=None):
     frame, feats = scen.build_scenario_frame(season, festival, weather, weekend,
-                                             return_features=True)
+                                             return_features=True,
+                                             month=sel_month, day=sel_day)
     facility = to_facility(frame, demand_scale, solar_scale, wind_scale)
     disp = dispatch_scenario(facility, capacity, soc0, power)
     disp["season"] = frame["season"].to_numpy()
@@ -74,19 +103,43 @@ def build_scenario(season, festival, weather, weekend, demand_scale, solar_scale
     return disp, feats
 
 
-def aggregate_blocks(disp, block, n):
+def aggregate_blocks(disp, block, n, start_from_midnight=False):
     if block == 1:
         out = disp.iloc[:n].copy()
         out["period"] = out["datetime"]
+        out["period_display"] = out["datetime"].dt.strftime("%Y-%m-%d %H:%M")
         return out
+    source = disp
+    if start_from_midnight:
+        now = pd.Timestamp.now(tz="Asia/Kolkata").tz_localize(None)
+        today_midnight = now.floor("D")
+        sub = disp[disp["datetime"] >= today_midnight]
+        if not sub.empty:
+            source = sub.reset_index(drop=True)
     rows = []
     for i in range(n):
         a = i * block
-        chunk = disp.iloc[a:a + block]
+        chunk = source.iloc[a:a + block]
         if chunk.empty:
             continue
         mean = chunk.mean(numeric_only=True)
-        mean["period"] = chunk["datetime"].iloc[0]
+        start_dt = chunk["datetime"].iloc[0]
+        end_dt = chunk["datetime"].iloc[-1]
+        mean["period"] = start_dt
+
+        # Clean period display per horizon
+        if block == 24:  # Daily
+            mean["period_display"] = start_dt.strftime("%Y-%m-%d (%A)")
+        elif block == 168:  # Weekly: e.g. 30/09 – 06/10/2026
+            if start_dt.year == end_dt.year:
+                mean["period_display"] = f"{start_dt.day:02d}/{start_dt.month:02d} – {end_dt.day:02d}/{end_dt.month:02d}/{end_dt.year}"
+            else:
+                mean["period_display"] = f"{start_dt.day:02d}/{start_dt.month:02d}/{start_dt.year} – {end_dt.day:02d}/{end_dt.month:02d}/{end_dt.year}"
+        elif block >= 700:  # Monthly
+            mean["period_display"] = start_dt.strftime("%B %Y")
+        else:
+            mean["period_display"] = start_dt.strftime("%Y-%m-%d %H:%M")
+
         mean["soc_expected_kwh"] = chunk["soc_expected_kwh"].iloc[-1]
         if "renewable_stored_cum_expected_kwh" in chunk:
             mean["renewable_stored_cum_expected_kwh"] = chunk["renewable_stored_cum_expected_kwh"].iloc[-1]
@@ -94,16 +147,22 @@ def aggregate_blocks(disp, block, n):
     return pd.DataFrame(rows)
 
 
-def aggregate_weather(block, n):
+def aggregate_weather(block, n, start_from_midnight=False):
     wx = load_weather()
     if wx.empty:
         return wx
-    wx = wx.iloc[:block * n]
     if block == 1:
-        return wx.rename(columns={"datetime": "period"})
+        return wx.iloc[:block * n].rename(columns={"datetime": "period"})
+    source = wx
+    if start_from_midnight:
+        now = pd.Timestamp.now(tz="Asia/Kolkata").tz_localize(None)
+        today_midnight = now.floor("D")
+        sub = wx[wx["datetime"] >= today_midnight]
+        if not sub.empty:
+            source = sub.reset_index(drop=True)
     rows = []
     for i in range(n):
-        chunk = wx.iloc[i * block:(i + 1) * block]
+        chunk = source.iloc[i * block:(i + 1) * block]
         if chunk.empty:
             continue
         m = chunk.mean(numeric_only=True)
@@ -116,15 +175,20 @@ def rng(lo, exp, up):
     return f"{exp:,.0f}  ({lo:,.0f}–{up:,.0f})"
 
 
-def table(view):
+def table(view, period_col="Period"):
+    avg_tag = " (Avg)" if period_col not in ("Hour (IST)", "Period") else ""
+    if "period_display" in view.columns:
+        p_series = view["period_display"]
+    else:
+        p_series = pd.to_datetime(view["period"]).dt.strftime("%Y-%m-%d %H:%M")
     return pd.DataFrame({
-        "Period": pd.to_datetime(view["period"]).dt.strftime("%Y-%m-%d %H:%M"),
-        "Demand kW": [rng(r.demand_lower_kw, r.demand_expected_kw, r.demand_upper_kw) for r in view.itertuples()],
-        "Renewable supply kW": [rng(r.renewable_lower_kw, r.renewable_expected_kw, r.renewable_upper_kw) for r in view.itertuples()],
-        "Renewable stored kW": [f"{getattr(r, 'renewable_stored_expected_kw', 0.0):,.0f}" for r in view.itertuples()],
+        period_col: p_series,
+        f"Demand kW{avg_tag}": [rng(r.demand_lower_kw, r.demand_expected_kw, r.demand_upper_kw) for r in view.itertuples()],
+        f"Renewable supply kW{avg_tag}": [rng(r.renewable_lower_kw, r.renewable_expected_kw, r.renewable_upper_kw) for r in view.itertuples()],
+        f"Renewable stored kW{avg_tag}": [f"{getattr(r, 'renewable_stored_expected_kw', 0.0):,.0f}" for r in view.itertuples()],
         "Battery SOC kWh": [f"{getattr(r, 'soc_expected_kwh', 0.0):,.0f}" for r in view.itertuples()],
-        "Storage discharge kW": [rng(r.battery_discharge_lower_kw, r.battery_discharge_expected_kw, r.battery_discharge_upper_kw) for r in view.itertuples()],
-        "Backup needed kW": [rng(r.backup_lower_kw, r.backup_expected_kw, r.backup_upper_kw) for r in view.itertuples()],
+        f"Storage discharge kW{avg_tag}": [rng(r.battery_discharge_lower_kw, r.battery_discharge_expected_kw, r.battery_discharge_upper_kw) for r in view.itertuples()],
+        f"Backup needed kW{avg_tag}": [rng(r.backup_lower_kw, r.backup_expected_kw, r.backup_upper_kw) for r in view.itertuples()],
     })
 
 
@@ -227,8 +291,17 @@ disp = build_dispatch(demand_scale, solar_scale, wind_scale, capacity, soc0, pow
 
 for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
     with tab:
-        view = aggregate_blocks(disp, cfg["block"], cfg["n"])
-        horizon = disp.iloc[:cfg["block"] * cfg["n"]]
+        from_midnight = cfg.get("start_from_midnight", False)
+        view = aggregate_blocks(disp, cfg["block"], cfg["n"], start_from_midnight=from_midnight)
+        
+        source = disp
+        if from_midnight:
+            now_mid = pd.Timestamp.now(tz="Asia/Kolkata").tz_localize(None).floor("D")
+            sub_d = disp[disp["datetime"] >= now_mid]
+            if not sub_d.empty:
+                source = sub_d.reset_index(drop=True)
+        horizon = source.iloc[:cfg["block"] * cfg["n"]]
+        
         imp = impact(horizon, tariff, factor)
         imp["stored_kwh"] = float(horizon["renewable_stored_expected_kw"].sum()) \
             if "renewable_stored_expected_kw" in horizon else 0.0
@@ -238,8 +311,8 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
         metrics_row(imp, horizon.demand_expected_kw.sum(), horizon.renewable_expected_kw.sum())
 
         st.markdown("---")
-        st.subheader("📋 Forecast Data Table (Expected values with Lower–Upper prediction bounds)")
-        st.dataframe(table(view), hide_index=True, width="stretch")
+        st.subheader(f"📋 Forecast Data Table ({cfg['unit_desc']} with Lower–Upper prediction bounds)")
+        st.dataframe(table(view, period_col=cfg["period_col"]), hide_index=True, width="stretch")
 
         st.markdown("---")
         st.subheader("📊 3 Core Interactive Visualizations")
@@ -255,7 +328,7 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
                 st.altair_chart(bc, width="stretch")
         with c2:
             st.markdown("#### 3️⃣ Combined Weather Context Attributes")
-            wx = aggregate_weather(cfg["block"], cfg["n"])
+            wx = aggregate_weather(cfg["block"], cfg["n"], start_from_midnight=from_midnight)
             wc = weather_chart(wx.rename(columns={"period": "datetime"}), height=320)
             if wc is not None:
                 st.altair_chart(wc, width="stretch")
@@ -264,7 +337,7 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
 
         st.markdown("---")
         st.subheader("🏭 Live Powerhouse Dispatch — Select Period")
-        periods = pd.to_datetime(view["period"]).dt.strftime("%Y-%m-%d %H:%M").tolist()
+        periods = view["period_display"].tolist() if "period_display" in view.columns else pd.to_datetime(view["period"]).dt.strftime(cfg["fmt"]).tolist()
 
         is_hourly = (cfg["n"] == 24 and cfg["block"] == 1)
         default_idx = 6 if is_hourly else 0
@@ -297,7 +370,7 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
                     return f"⏮️ {p_str} (-{6 - i}h past)"
                 else:
                     return f"⏭️ {p_str} (+{i - 6}h future forecast)"
-            return f"{p_str} (Period {i + 1} of {len(view)})"
+            return f"{p_str} ({cfg['period_col']} {i + 1} of {len(view)})"
 
         def on_picker_change():
             st.session_state[time_key] = time.time()
@@ -334,71 +407,135 @@ for (label, cfg), tab in zip(TABS.items(), st.tabs(list(TABS.keys()))):
             st.markdown(f"- {line}")
 
 # =====================================================================
-# SIMULATOR 2 — SCENARIO WHAT-IF DISPATCH
+# SIMULATOR 2 — SCENARIO WHAT-IF DISPATCH (Hourly Drill-Down)
 # =====================================================================
+import calendar as _cal
+
 st.markdown("---")
 st.header("🟡 Scenario Dispatch Simulator — What-If Sandbox")
-st.caption("Build a hypothetical day (season · festival · day type · weather). The trained models "
-           "forecast it and the same battery hierarchy dispatches it.")
+st.caption(
+    "Build a hypothetical day (season · festival · day type · weather). "
+    "Drill down to a specific month → day → hour. "
+    "The trained models forecast each of the 24 hours and the same battery hierarchy dispatches it."
+)
 
+# ── Row 1: Scenario selectors ──────────────────────────────────────────
 cc = st.columns(4)
-season = cc[0].selectbox("Season", SEASONS, index=1)
-festival = cc[1].selectbox("Festival day", scen.festival_choices(), index=0)
-weather = cc[2].selectbox("Weather condition", scen.PRESET_NAMES, index=0)
-weekend = cc[3].selectbox("Day type", ["Weekday", "Weekend"], index=0) == "Weekend"
+season  = cc[0].selectbox("Season",            SEASONS,                index=1)
+festival= cc[1].selectbox("Festival day",      scen.festival_choices(),index=0)
+weather = cc[2].selectbox("Weather condition", scen.PRESET_NAMES,      index=0)
+weekend = cc[3].selectbox("Day type",          ["Weekday","Weekend"],  index=0) == "Weekend"
 
-sdisp, sfeats = build_scenario(season, festival, weather, weekend, demand_scale, solar_scale,
-                               wind_scale, capacity, soc0, power)
-lab = scen.scenario_labels(season, festival, weather, weekend)
+# ── Row 2: Month → Day → Hour drill-down ───────────────────────────────
 if festival != "No festival":
-    st.markdown(f"**Selected Scenario:** {lab['season']} · {lab['festival']} ({lab['date']}) · {lab['weather']} · {lab['day_type']}")
+    # Festival date is fixed — show it read-only, no override allowed
+    fest_date  = scen.scenario_day_date(season, festival)
+    sel_month  = fest_date.month
+    sel_day    = fest_date.day
+    dc = st.columns(3)
+    dc[0].info(f"📅 **Month locked:** {scen.MONTH_NAMES[sel_month]}  *(festival date)*")
+    dc[1].info(f"📅 **Day locked:** {sel_day}  *(festival date)*")
+    sel_hour = dc[2].selectbox("Hour of Day", range(24), format_func=lambda h: f"{h:02d}:00",
+                               key="scen_hour")
 else:
-    st.markdown(f"**Selected Scenario:** {lab['season']} · {lab['festival']} · {lab['weather']} · {lab['day_type']}")
+    season_months = scen.SEASON_MONTHS.get(season, list(range(1, 13)))
+    dc = st.columns(3)
+    sel_month = dc[0].selectbox(
+        "Month", season_months,
+        format_func=lambda m: scen.MONTH_NAMES[m],
+        key="scen_month"
+    )
+    max_day  = _cal.monthrange(2026, sel_month)[1]
+    # Default to 15th (mid-month representative day)
+    default_day_idx = min(14, max_day - 1)          # 0-indexed → day 15
+    sel_day  = dc[1].selectbox(
+        "Day of Month", range(1, max_day + 1),
+        index=default_day_idx,
+        key="scen_day"
+    )
+    sel_hour = dc[2].selectbox(
+        "Hour of Day", range(24),
+        format_func=lambda h: f"{h:02d}:00",
+        key="scen_hour"
+    )
 
-SCEN_TABS = {
-    "Hourly · 24 h": {"block": 1, "n": 24, "picker_label": "Select Hour of Scenario Day", "fmt": "%H:%M"},
-    "Daily · 7 days": {"block": 24, "n": 7, "picker_label": "Select Day of Scenario Week", "fmt": "%Y-%m-%d (%a)"},
-    "Weekly · 4 weeks": {"block": 168, "n": 4, "picker_label": "Select Week of Scenario Month", "fmt": "Week %U (%Y-%m-%d)"},
-    "Monthly · 12 months": {"block": 730, "n": 12, "picker_label": "Select Month of Scenario Year", "fmt": "%B %Y"},
-}
+# ── Build full 24-hour scenario for the selected date ──────────────────
+sdisp, sfeats = build_scenario(
+    season, festival, weather, weekend,
+    demand_scale, solar_scale, wind_scale,
+    capacity, soc0, power,
+    sel_month=sel_month, sel_day=sel_day
+)
 
-for (slab, scfg), stab in zip(SCEN_TABS.items(), st.tabs(list(SCEN_TABS.keys()))):
-    with stab:
-        sview = aggregate_blocks(sdisp, scfg["block"], scfg["n"])
-        shorizon = sdisp.iloc[:scfg["block"] * scfg["n"]]
-        simp = impact(shorizon, tariff, factor)
-        simp["stored_kwh"] = float(shorizon["renewable_stored_expected_kw"].sum()) \
-            if "renewable_stored_expected_kw" in shorizon else 0.0
-        simp["discharged_kwh"] = float(shorizon["battery_discharge_expected_kw"].sum()) \
-            if "battery_discharge_expected_kw" in shorizon else 0.0
+lab = scen.scenario_labels(season, festival, weather, weekend,
+                           month=sel_month, day=sel_day)
+if festival != "No festival":
+    st.markdown(
+        f"**Scenario:** {lab['season']} · **{lab['festival']}** ({lab['date']}) "
+        f"· {lab['weather']} · {lab['day_type']} · **{sel_hour:02d}:00**"
+    )
+else:
+    st.markdown(
+        f"**Scenario:** {lab['season']} · {scen.MONTH_NAMES[sel_month]} {sel_day}, 2026 "
+        f"· {lab['weather']} · {lab['day_type']} · **{sel_hour:02d}:00**"
+    )
 
-        metrics_row(simp, shorizon.demand_expected_kw.sum(), shorizon.renewable_expected_kw.sum())
+# ── 24-hour dispatch view for the selected day ─────────────────────────
+sview = sdisp.copy()
+sview["period"] = sview["datetime"]
+sview["period_display"] = sview["datetime"].dt.strftime("%H:%M")
 
-        c1, c2 = st.columns([1.2, 1])
-        with c1:
-            st.subheader("1️⃣ Scenario Demand & Renewable Generation Breakdown")
-            sbc = demand_breakdown_chart(sview, time_col="period", height=320)
-            if sbc is not None:
-                st.altair_chart(sbc, width="stretch")
-        with c2:
-            st.subheader("2️⃣ Scenario Weather Attributes")
-            swx = sdisp if scfg["block"] == 1 else sview.rename(columns={"period": "datetime"})
-            wc = weather_chart(swx, height=320)
-            if wc is not None:
-                st.altair_chart(wc, width="stretch")
+# Highlight selected hour with a vertical rule marker
+sel_ts = sview.iloc[sel_hour]["datetime"]
 
-        st.subheader("🏭 What-If Powerhouse Dispatch")
-        speriods = pd.to_datetime(sview["period"]).dt.strftime(scfg["fmt"]).tolist()
-        spick = st.selectbox(f"{scfg['picker_label']}", range(len(sview)),
-                             format_func=lambda i: speriods[i], index=0, key=f"scen_pick_{slab}")
-        srow = sview.iloc[spick]
-        sdt = pd.to_datetime(srow.period)
-        ssc = sc_dict(srow, sdt, tariff, factor)
-        powerhouse(ssc, capacity)
+# 7-metric summary for the full 24 h day
+simp = impact(sdisp, tariff, factor)
+simp["stored_kwh"]    = float(sdisp["renewable_stored_expected_kw"].sum()) \
+    if "renewable_stored_expected_kw" in sdisp else 0.0
+simp["discharged_kwh"]= float(sdisp["battery_discharge_expected_kw"].sum()) \
+    if "battery_discharge_expected_kw" in sdisp else 0.0
+metrics_row(simp, sdisp.demand_expected_kw.sum(), sdisp.renewable_expected_kw.sum())
 
-        st.subheader("🔍 Explainability (Point-wise SHAP Attributions)")
-        frow = sfeats.iloc[min(spick * scfg["block"], len(sfeats) - 1)].to_dict()
-        frow["datetime"] = sdt
-        sex = explain_from_features(frow, ssc, tariff, factor)
-        for line in sex["lines"]:
-            st.markdown(f"- {line}")
+st.markdown("---")
+st.subheader("📋 Scenario Hourly Dispatch Table (full 24 h day)")
+st.dataframe(table(sview, period_col="Hour (IST)"), hide_index=True, width="stretch")
+
+st.markdown("---")
+st.subheader("📊 Scenario Day — Energy Profile")
+c1, c2 = st.columns([1.2, 1])
+with c1:
+    st.markdown("#### 1️⃣ Demand & Renewable Generation Breakdown (24 h)")
+    sbc = demand_breakdown_chart(sview, time_col="period", height=320)
+    if sbc is not None:
+        # Add a vertical rule at the selected hour
+        rule = (
+            alt.Chart(pd.DataFrame({"sel": [sel_ts]}))
+            .mark_rule(color="#f1c40f", strokeDash=[6, 3], strokeWidth=2)
+            .encode(x=alt.X("sel:T"))
+        )
+        st.altair_chart((sbc + rule).interactive(), width="stretch")
+with c2:
+    st.markdown("#### 2️⃣ Scenario Weather Attributes (24 h)")
+    wc = weather_chart(sdisp, time_col="datetime", height=320)
+    if wc is not None:
+        rule_wx = (
+            alt.Chart(pd.DataFrame({"sel": [sel_ts]}))
+            .mark_rule(color="#f1c40f", strokeDash=[6, 3], strokeWidth=2)
+            .encode(x=alt.X("sel:T"))
+        )
+        st.altair_chart((wc + rule_wx).interactive(), width="stretch")
+
+st.markdown("---")
+st.subheader(f"🏭 What-If Powerhouse Dispatch — {sel_hour:02d}:00")
+srow = sview.iloc[sel_hour]
+sdt  = pd.to_datetime(srow.period)
+ssc  = sc_dict(srow, sdt, tariff, factor)
+powerhouse(ssc, capacity)
+
+st.subheader("🔍 Explainability (Point-wise SHAP Attributions)")
+frow = sfeats.iloc[sel_hour].to_dict()
+frow["datetime"] = sdt
+sex = explain_from_features(frow, ssc, tariff, factor)
+for line in sex["lines"]:
+    st.markdown(f"- {line}")
+

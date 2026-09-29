@@ -37,6 +37,20 @@ from src.models.realtime_forecast import (LAGS, WEATHER, WINDOWS, Z,  # noqa: E4
 # Representative month for each IMD season (used when no festival is selected).
 SEASON_MONTH = {"Winter": 1, "Summer": 5, "Monsoon": 7, "Post-monsoon": 10}
 
+# All months belonging to each IMD season (for the hour-drill-down selector).
+SEASON_MONTHS = {
+    "Winter": [12, 1, 2],
+    "Summer": [3, 4, 5, 6],
+    "Monsoon": [6, 7, 8, 9],
+    "Post-monsoon": [10, 11],
+}
+
+MONTH_NAMES = {
+    1: "January", 2: "February", 3: "March", 4: "April",
+    5: "May", 6: "June", 7: "July", 8: "August",
+    9: "September", 10: "October", 11: "November", 12: "December",
+}
+
 # Editable weather presets. `radiation_peak` scales the diurnal solar curve;
 # `temp_day`/`temp_night` drive a simple diurnal temperature curve.
 WEATHER_PRESETS = {
@@ -77,14 +91,25 @@ def _festival_date(name, prefer_year=2026):
     return None
 
 
-def scenario_day_date(season="Summer", festival="No festival"):
-    """The representative calendar date for a scenario (festival wins if given)."""
+def scenario_day_date(season="Summer", festival="No festival", month=None, day=None):
+    """The representative calendar date for a scenario.
+
+    Priority order:
+      1. Festival date (if a specific festival is selected) — festival always wins.
+      2. Explicit month + day from the drill-down selector.
+      3. Default representative date for the season.
+    """
     if festival and festival != "No festival":
         d = _festival_date(festival)
         if d is not None:
             return d
-    month = SEASON_MONTH.get(season, 5)
-    return pd.Timestamp(year=2026, month=month, day=15)
+    if month is not None:
+        import calendar as _cal
+        max_day = _cal.monthrange(2026, month)[1]
+        actual_day = min(day if day is not None else 15, max_day)
+        return pd.Timestamp(year=2026, month=month, day=actual_day)
+    ref_month = SEASON_MONTH.get(season, 5)
+    return pd.Timestamp(year=2026, month=ref_month, day=15)
 
 
 def _weather_for_hour(preset, hour):
@@ -132,13 +157,28 @@ def _analog_value(stats, stem, month, hour, kind):
 
 
 def build_scenario_frame(season="Summer", festival="No festival", weather="Sunny / clear",
-                         weekend=False, days=365, hist=None, pack=None, return_features=False):
-    """Predict a representative multi-day scenario horizon (default 365 days = 8760h)
-    and return the national-unit hourly bound frame.
+                         weekend=False, days=1, hist=None, pack=None, return_features=False,
+                         month=None, day=None):
+    """Build a 24-hour scenario day (default days=1) for the chosen season/festival/weather/date.
+
+    The inner loop now correctly iterates over all 24 hours, computing calendar
+    features, weather, model predictions and bounds for EACH hour — not just hour 23.
+
+    Args:
+        season: IMD season string ("Winter" / "Summer" / "Monsoon" / "Post-monsoon").
+        festival: Festival name or "No festival".
+        weather: Weather preset name from WEATHER_PRESETS.
+        weekend: If True, shift start_date to the nearest Saturday.
+        days: Number of days to simulate (default 1 = 24 rows).
+        month: Explicit month (1-12) overrides season default (ignored if festival given).
+        day: Explicit day-of-month overrides season default (ignored if festival given).
+        hist: Pre-loaded history DataFrame (loaded from disk if None).
+        pack: Pre-loaded model pack (loaded from disk if None).
+        return_features: If True, also return the feature matrix used for SHAP.
     """
     pack = pack or load_pack()
     hist = hist if hist is not None else load_history()
-    start_date = scenario_day_date(season, festival)
+    start_date = scenario_day_date(season, festival, month=month, day=day)
     if weekend:
         # shift to the nearest Saturday for a genuine weekend calendar encoding
         start_date = start_date + pd.Timedelta(days=(5 - start_date.dayofweek) % 7)
@@ -150,50 +190,60 @@ def build_scenario_frame(season="Summer", festival="No festival", weather="Sunny
     for d_idx in range(days):
         cur_date = start_date + pd.Timedelta(days=d_idx)
         for hour in range(24):
-            ts = pd.Timestamp(year=cur_date.year, month=cur_date.month, day=cur_date.day, hour=hour)
-        row = _calendar(ts)
-        row.update(_weather_for_hour(weather, hour))
-        for name, info in models.items():
-            stem = info["target"].replace("_mw", "").replace("_kw", "")
-            mean = _analog_value(stats, stem, ts.month, ts.hour, "mean")
-            std = _analog_value(stats, stem, ts.month, ts.hour, "std")
-            for lag in LAGS:
-                row[f"{stem}_lag_{lag}h"] = mean
-            for w in WINDOWS:
-                row[f"{stem}_rolling_mean_{w}h"] = mean
-                row[f"{stem}_rolling_std_{w}h"] = std
-            feats = info["features"]
-            pred = float(info["model"].predict(np.array([[row[f] for f in feats]], float))[0])
-            if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
-                pred = 0.0
-            pred = max(0.0, pred)
-            margin = Z * info["residual_std"]
-            unit = "mw" if name == "demand" else "kw"
-            if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
-                row[f"{name}_{unit}_expected"] = 0.0
-                row[f"{name}_{unit}_lower"] = 0.0
-                row[f"{name}_{unit}_upper"] = 0.0
-            else:
-                row[f"{name}_{unit}_expected"] = pred
-                row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
-                row[f"{name}_{unit}_upper"] = pred + margin
-        value_cols = [c for c in row if c.endswith(("_lower", "_expected", "_upper"))]
-        records.append({"datetime": ts, **{c: row[c] for c in value_cols},
-                        "season": row.get("season"), "festival_name": row.get("festival_name"),
-                        **{c: row[c] for c in WEATHER}})
-        if return_features:
-            feature_rows.append({"datetime": ts, **{c: row[c] for c in feature_union},
-                                 "season": row.get("season"), "festival_name": row.get("festival_name"),
-                                 **{c: row[c] for c in WEATHER}})
+            # ---------- timestamp + calendar features ----------
+            ts = pd.Timestamp(year=cur_date.year, month=cur_date.month,
+                              day=cur_date.day, hour=hour)
+            row = _calendar(ts)
+            row.update(_weather_for_hour(weather, hour))
+
+            # ---------- lag / rolling features from historical analogs ----------
+            for name, info in models.items():
+                stem = info["target"].replace("_mw", "").replace("_kw", "")
+                mean = _analog_value(stats, stem, ts.month, ts.hour, "mean")
+                std = _analog_value(stats, stem, ts.month, ts.hour, "std")
+                for lag in LAGS:
+                    row[f"{stem}_lag_{lag}h"] = mean
+                for w in WINDOWS:
+                    row[f"{stem}_rolling_mean_{w}h"] = mean
+                    row[f"{stem}_rolling_std_{w}h"] = std
+
+                # ---------- model prediction ----------
+                feats = info["features"]
+                pred = float(info["model"].predict(
+                    np.array([[row[f] for f in feats]], float))[0])
+                if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
+                    pred = 0.0
+                pred = max(0.0, pred)
+                margin = Z * info["residual_std"]
+                unit = "mw" if name == "demand" else "kw"
+                if name == "solar" and row.get("solar_radiation_w_m2", 0.0) <= 0:
+                    row[f"{name}_{unit}_expected"] = 0.0
+                    row[f"{name}_{unit}_lower"] = 0.0
+                    row[f"{name}_{unit}_upper"] = 0.0
+                else:
+                    row[f"{name}_{unit}_expected"] = pred
+                    row[f"{name}_{unit}_lower"] = max(0.0, pred - margin)
+                    row[f"{name}_{unit}_upper"] = pred + margin
+
+            # ---------- collect row ----------
+            value_cols = [c for c in row if c.endswith(("_lower", "_expected", "_upper"))]
+            records.append({"datetime": ts, **{c: row[c] for c in value_cols},
+                            "season": row.get("season"), "festival_name": row.get("festival_name"),
+                            **{c: row[c] for c in WEATHER}})
+            if return_features:
+                feature_rows.append({"datetime": ts, **{c: row[c] for c in feature_union},
+                                     "season": row.get("season"), "festival_name": row.get("festival_name"),
+                                     **{c: row[c] for c in WEATHER}})
+
     frame = pd.DataFrame(records)
     if return_features:
         return frame, pd.DataFrame(feature_rows)
     return frame
 
 
-def scenario_labels(season, festival, weather, weekend):
+def scenario_labels(season, festival, weather, weekend, month=None, day=None):
     """Human context for the scenario header/narrative."""
-    date = scenario_day_date(season, festival)
+    date = scenario_day_date(season, festival, month=month, day=day)
     return {
         "date": date.strftime("%Y-%m-%d"),
         "season": season_name(date.month),
