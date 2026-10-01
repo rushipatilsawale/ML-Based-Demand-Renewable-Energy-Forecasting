@@ -1,9 +1,11 @@
-# Comprehensive Project Audit & Target Architecture Blueprint
+# Historical Project Audit & Target Architecture Blueprint
 
 **Project**: ML-Based Demand & Renewable Energy Forecasting and Real-Time Energy Management System  
 **Audit Date**: September 2026  
 **Auditor**: Antigravity Technical Audit Agent  
 **Status**: Pre-Implementation Deep Audit (No Code Modified)
+
+> **Historical snapshot:** This audit describes the repository and proposed architecture before the delivered redesign. Its “Current Architecture,” gap list, and recommended 9-view target are not a status report for the current project. For the implemented system, current pipeline, and run instructions, see [README.md](../README.md), [progress.md](./progress.md), and [complete_overview.md](./complete_overview.md).
 
 ---
 

@@ -67,7 +67,7 @@ All sources are aligned to one common hourly index (Delhi/India), so demand, wea
 1. **Data collection & cleaning** — inspect, clean and align the four sources; validate continuity, nulls, duplicates → `aligned_hourly_dataset.csv`.
 2. **EDA** — hourly/daily/weekly/monthly demand and renewable patterns, correlations, figures.
 3. **Feature engineering** — cyclical calendar, lags (1/24/168 h), rolling (24/168 h), `shift(1)` before rolling to prevent leakage.
-4. **Model training & selection** — three candidates per target, auto-select lowest validation RMSE on a chronological split.
+4. **Model training & selection** — evaluate seasonal-naive benchmarks, a linear-regression baseline, and three advanced ML candidates per target on a shared chronological split; compare deployable candidates by RMSE, then MAE and MAPE.
 5. **Real-time forecasting** — anchor at the current IST hour, blend live Open-Meteo weather (16 d) with climatology, recurse 12 months, widen 95% intervals, aggregate to daily/weekly/monthly, cache to CSV.
 6. **Dispatch simulator & impact** — facility scaling, renewable→battery(auto-fill)→grid dispatch across all three bound levels with a `renewable_stored` column, plus a what-if scenario simulator; no-storage counterfactual for cost & CO₂.
 7. **SHAP explainability** — explain the dispatch / CO₂ / cost calculations for a selected timestamp, plus a season/festival/weather/time-of-day context narrative.

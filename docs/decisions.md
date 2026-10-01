@@ -26,7 +26,7 @@ Rationale behind the redesigned real-time forecasting system.
 | Decision | Reason |
 |---|---|
 | Multiple candidates per target (LinearRegression, Ridge, RandomForest, HistGradientBoosting, XGBoost) | Lets the data pick the model per target based on validation RMSE. |
-| Auto-select by validation RMSE on a chronological split | RMSE penalises large errors; chronological split simulates real past→future deployment. |
+| Auto-select by validation RMSE on a chronological split; for wind, first exclude candidates with MAE ≤ 0.05 | RMSE penalises large errors; chronological split simulates real past→future deployment. The wind guard excludes the near-zero-output RandomForest candidate observed in the current run. |
 | Feature isolation via `sklearn.base.clone(model)` | Prevents XGBoost feature name collisions across multiple targets. |
 | Persist model + feature list + algorithm + residual std in one joblib pack | The forecaster and SHAP explainer must use the exact training features and residual scale. |
 

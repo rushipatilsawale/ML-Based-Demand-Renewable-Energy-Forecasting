@@ -9,8 +9,8 @@ Status of the redesigned, real-time forecasting system. The legacy 14-phase line
 | 1 | Data acquisition (demand, weather, wind, solar) | `data/raw/…`, `demand_cleaned.csv`, `solar_hourly.csv`, `nasa_power_wind_hourly.csv` | ✅ Completed |
 | 2 | Preprocessing & timestamp alignment | `aligned_hourly_dataset.csv` (46,728 × 23), `data_quality_summary.csv` | ✅ Completed |
 | 3 | EDA & pattern analysis (hourly/daily/weekly/monthly) | `reports/*_eda_records.csv`, `*_pattern_profile.csv`, `figures/` | ✅ Completed |
-| 4 | Leakage-safe feature engineering | `forecast_features.csv` (46,560 × 51), `feature_manifest.json` | ✅ Completed |
-| 5 | Model training & auto-selection (3 targets × 3 candidates) | `models/realtime_forecasters.joblib`, `reports/realtime_model_metrics.csv` | ✅ Completed |
+| 4 | Leakage-safe feature engineering | `forecast_features.csv` (46,560 rows; 58 columns), `feature_manifest.json` | ✅ Completed |
+| 5 | Model training & auto-selection (3 targets × 3 advanced ML candidates, plus baselines) | `models/realtime_forecasters.joblib`, `reports/best_model.csv` | ✅ Completed |
 | 6 | Live weather feed (Open-Meteo, real-time anchor) | `src/data/live_weather.py` | ✅ Completed |
 | 7 | Real-time recursive multi-horizon forecast (now → +12 months) | `forecasts/hourly|daily|weekly|monthly_forecast.csv`, `future_features.csv` | ✅ Completed |
 | 8 | Scenario dispatch simulator (3 bound levels) | `src/forecasting/operations.py` | ✅ Completed |
@@ -31,7 +31,7 @@ Status of the redesigned, real-time forecasting system. The legacy 14-phase line
 
 - Aligned dataset: 46,728 continuous hourly rows, 0 nulls, 0 duplicate timestamps.
 - Dispatch energy conservation residual: 0.0 kW; SOC bounded within `[0, capacity]`.
-- Real-time anchor: forecast starts at the current IST hour (cached run anchored to live time in IST).
+- Real-time anchor: each forecast run starts from the current IST hour; the committed forecast cache is a generated snapshot and must be regenerated to refresh its timestamps and weather.
 - Live weather feed verified reachable (Open-Meteo, status 200).
 - Dashboard renders all four tabs with ranged table, bounds chart, scenario simulator, 7 metric summary cards, animated powerhouse topology, and SHAP explanation.
 

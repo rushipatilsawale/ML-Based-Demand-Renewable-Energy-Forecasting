@@ -2,7 +2,7 @@ Dataset Research Report
 ML-Based Demand & Renewable Energy Forecasting
 Curated datasets, APIs and sources for demand, solar, wind, and emissions data
 How to Use This Document
-We recommend picking ONE consistent region/country so demand data, weather data, and emission factors all align in time and geography. Two ready-made combos are suggested at the end of this document (Section 6) — an India-based combo and a US/PJM-based combo — pick whichever is easier for your team to access and matches your pitch.
+This document records candidate sources considered during project research; it is not a list of datasets all used by the delivered system. The implemented India-focused sources and their roles are summarized in the project README. The alternatives below are research options, not additional project dependencies. Keep demand, weather, renewable and emission data aligned in time and geography when adapting the project.
 1. Electricity Demand / Load Datasets
 1.1 Hourly Load India — Electrical Load Forecasting (Recommended for India-based project)
 https://www.kaggle.com/datasets/shubhamvashisht/hourly-load-india-electrical-load-forecasting
@@ -76,9 +76,9 @@ https://www.kaggle.com/datasets/jorgesandoval/wind-power-generation
 4.1 CEA CO2 Baseline Database for the Indian Power Sector (Recommended if using India data)
 https://cea.nic.in/
 •	Source: Central Electricity Authority (CEA), Ministry of Power, Government of India
-•	Latest version: Version 21.0 (Nov 2025), covering FY 2024-25
-•	Key figure: India's grid-wide weighted average emission factor is 0.710 tCO2/MWh for FY 2024-25 (declined from 0.774 tCO2/MWh in FY 2013-14)
-•	Why it fits: this is the authoritative, most current number to convert 'MW of backup power avoided' into 'tons of CO2 avoided' in your impact calculator
+• Project reference: 0.710 tCO2/MWh (equivalent to 0.710 kg CO2/kWh), used as a configurable scenario assumption
+• Before presenting this as the current grid factor, verify the applicable CEA baseline edition and reporting year.
+•	Why it fits: this is the authoritative source to consult for converting avoided grid energy into avoided CO2; confirm the factor and units for the relevant reporting year before using it.
 4.2 EPA eGRID (US Emission Factors)
 https://www.epa.gov/egrid
 •	Source: US Environmental Protection Agency
@@ -115,14 +115,14 @@ CO2 Factors	India	CEA CO2 Baseline Database
 CO2 Factors	USA	EPA eGRID
 
  
-6. Recommended Combos (Pick One)
-Combo A — India-Focused (Recommended)
+6. Research Combos (Alternatives; the delivered project uses the implementation described in README)
+Combo A — India-Focused Research Alternative
 •	Demand: Hourly Load India (Kaggle) — Section 1.1
 •	Weather: Open-Meteo API, queried for the same Indian region/city — Section 2.1
-•	Solar supply: Solar Power Generation Data or SolarGeneration Karnataka — Section 3.1 / 3.2
+• Solar supply: Solar Power Generation Data or SolarGeneration Karnataka — Section 3.1 / 3.2 (alternative to the delivered PVGIS modelled potential)
 •	Wind supply: use NASA POWER wind speed data as a proxy if a matching Indian wind SCADA dataset isn't available, or supplement with the Turkey SCADA dataset for methodology only
 •	CO2 factor: CEA CO2 Baseline Database, 0.710 tCO2/MWh — Section 4.1
-Why this combo: everything lines up geographically and can be tied back to your pitch's India-relevant framing, and CEA gives you a precise, citable, current emission factor.
+Why this combo: this is a research option for a plant-data study. The delivered project instead uses PVGIS modelled Delhi solar potential and NASA POWER wind resource, as documented in the README.
 Combo B — US-Focused (Alternative)
 •	Demand: PJM Hourly Energy Consumption (Kaggle) or EIA Open Data API — Section 1.2 / 1.3
 •	Weather: Open-Meteo API, queried for the PJM region — Section 2.1

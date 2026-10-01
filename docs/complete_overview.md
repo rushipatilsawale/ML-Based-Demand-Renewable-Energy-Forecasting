@@ -19,7 +19,7 @@ Modelling runs as a four-stage pipeline, all stages sharing one chronological 80
 1. **Baseline** (`src/baseline/evaluate_baselines.py`) — seasonal-naive at 1 h / 24 h / 168 h / 720 h plus a linear-regression benchmark, per target → `reports/baseline_metrics.csv`.
 2. **Advanced ML** (`src/models/prepare_ml_data.py` → `train_ml_models.py`) — RandomForest, HistGradientBoosting and XGBoost per target → `reports/ml_model_metrics.csv`.
 3. **Comparison** (`src/comparison/compare_models.py`) — every model ranked by RMSE within each target → `reports/performance_comparison.csv`.
-4. **Selection** (`src/selection/select_best_model.py`) — the best *deployable* (feature-based) model per target is chosen by RMSE→MAE→MAPE, refit on the full dataset, and persisted with its feature list, algorithm name and held-out residual std (which drives the widening 95% intervals) → `models/realtime_forecasters.joblib`, `reports/best_model.csv`.
+4. **Selection** (`src/selection/select_best_model.py`) — the best *deployable* (feature-based) model per target is chosen by RMSE→MAE→MAPE, refit on the full dataset, and persisted with its feature list, algorithm name and held-out residual std (which drives the widening 95% intervals) → `models/realtime_forecasters.joblib`, `reports/best_model.csv`. For wind only, candidates with MAE ≤ 0.05 are excluded first to avoid selecting the near-zero-output RandomForest model observed in the current run.
 
 Selected on the current data: **demand → linear_regression (RMSE 3237.13)**, **solar → xgboost (RMSE 28.39)**, **wind → xgboost (RMSE 6.44)**. Naive baselines are benchmarks only — they have no feature vector, so they are excluded from deployment.
 

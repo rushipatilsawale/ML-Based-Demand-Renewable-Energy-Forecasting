@@ -126,7 +126,7 @@ ML-Based-Demand-Renewable-Energy-Forecasting/
 | `src/data/clean_solar.py` | Normalise solar to hourly `solar_generation_kw` | pandas | `data/processed/solar_hourly.csv` |
 | `src/renewable/download_wind_data.py` | Download NASA POWER `WS10M` hourly wind speed (Delhi) | requests, NASA POWER API | `data/raw/renewable/nasa_power_wind_hourly.csv` |
 | `src/data/build_aligned_dataset.py` | Inner-join all four sources on hourly timestamp; validate continuity/nulls/duplicates; convert wind speed → power via 1 MW turbine curve | pandas | `aligned_hourly_dataset.csv`, `data_quality_summary.csv` |
-| `src/eda/run_aligned_eda.py` | Hourly/daily/weekly/monthly demand & renewable patterns, correlations, dual-axis figures | pandas, matplotlib | `reports/*_eda_records.csv`, `*_pattern_profile.csv`, `figures/` |
+| `src/eda/run_aligned_eda.py` | Hourly/daily/weekly/monthly demand & renewable patterns, correlations, dual-axis figures | pandas, matplotlib | `reports/*_eda_records.csv`, `*_pattern_profile.csv`, `reports/figures/` |
 | `src/eda/pattern_analysis.py` | Advanced patterns: hourly, weekday/weekend, regional, yearly, IMD season, Indian-festival effect, weather-band (humidity/temp/cloud/wind) vs demand & renewable | pandas, matplotlib | `reports/patterns/*.csv`, `reports/figures/patterns/*.png` |
 | `src/features/calendar_features.py` | Single source of truth for IMD season + Indian festival calendar; emits season one-hot, `is_festival`, and `season`/`festival_name` labels | pandas | used by features, training, real-time engine |
 | `src/features/build_forecast_features.py` | Cyclical calendar + season/festival + lag (1/24/168 h) + rolling (24/168 h) features; `shift(1)` before rolling to prevent leakage | numpy, pandas | `forecast_features.csv` (46,560 × 58), `feature_manifest.json` |
@@ -161,7 +161,7 @@ All four are inner-joined into **`aligned_hourly_dataset.csv` — 46,728 hourly 
 
 ## 6. Models & selection
 
-Each target trains three candidates and keeps the one with the lowest validation RMSE (chronological split, 9,312 test rows):
+Each target is evaluated on the same chronological holdout (9,312 test rows). The baseline stage includes seasonal-naive benchmarks and linear regression; the advanced ML stage evaluates Random Forest, HistGradientBoosting, and XGBoost. Deployable feature-based candidates are compared by RMSE (then MAE and MAPE); naive models are benchmarks only:
 
 | Target | Selected model | RMSE | MAE | MAPE |
 |---|---|---:|---:|---:|
@@ -169,13 +169,15 @@ Each target trains three candidates and keeps the one with the lowest validation
 | Solar (`solar_generation_kw`) | **XGBoost** | 28.39 | 11.87 | 22.3% |
 | Wind (`wind_power_potential_kw`) | **XGBoost** | 6.44 | 0.43 | 1.11% |
 
+For wind, the selection step excludes candidates with MAE ≤ 0.05 to avoid the near-zero-output Random Forest model observed in the current run.
+
 Scikit-learn and XGBoost estimators are used (LinearRegression, XGBRegressor). The selected model, its exact feature list, algorithm name and residual std are persisted together in `models/realtime_forecasters.joblib`.
 
 ---
 
 ## 7. Real-time forecasting (how "from now" works)
 
-- **Anchor:** `pd.Timestamp.now(tz="Asia/Kolkata").floor("h")` — the forecast starts at the current IST hour (the cached run is anchored `2026-09-22 07:00`).
+- **Anchor:** the engine anchors each new forecast run to the current IST hour. The committed forecast CSVs are generated snapshots, so their timestamps do not update until the forecast pipeline is run again.
 - **Weather:** live Open-Meteo Delhi forecast for the next 16 days; beyond that, month×hour climatological normals from the aligned history.
 - **Demand seed:** historical demand ends 2024-04-30, so the autoregressive buffers are seeded from the last 168 observed hours. *(Documented limitation: there is no live demand feed; demand patterns are learned, then projected.)*
 - **Recursion:** each predicted hour feeds its own lag/rolling features forward (lags 1/24/168 h, rolling 24/168 h).
@@ -292,7 +294,7 @@ Then open the URL printed in the terminal (normally `http://localhost:8501`).
 
 **PowerShell / CMD** equivalents use `.venv\Scripts\python.exe` and `.venv\Scripts\streamlit.exe`.
 
-> Steps 1–4 are batch preparation. If `data/processed/forecasts/*.csv` and `models/realtime_forecasters.joblib` already exist, you can skip straight to step 5 — the dashboard reads the cache and does not retrain.
+> Steps 1–6 prepare the data, models, and forecast cache. If `data/processed/forecasts/*.csv` and `models/realtime_forecasters.joblib` already exist, skip those preparation steps and run only step 7; the dashboard reads the cache and does not retrain.
 
 ---
 
